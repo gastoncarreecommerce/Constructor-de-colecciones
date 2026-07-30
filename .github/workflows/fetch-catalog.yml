@@ -13,10 +13,10 @@ on:
 
 env:
   # Lista default de sellers que se refrescan todas las noches.
-  # Subset inicial de validación (ver scripts/lib/sellerMaster.ts para el
-  # maestro completo de sellers 3P de Carrefour AR). Una vez confirmado que
-  # el pipeline anda bien con estos, sumar más ids acá separados por coma.
-  DEFAULT_SELLER_IDS: "bangho,electroluxar,whirlpoolarg"
+  # (bangho es un seller de prueba que no tiene catálogo real, sacado del
+  # default). Ver scripts/lib/sellerMaster.ts para el maestro completo de
+  # sellers 3P de Carrefour AR — sumá más ids acá separados por coma.
+  DEFAULT_SELLER_IDS: "electroluxar,whirlpoolarg"
 
 jobs:
   fetch-catalog:
