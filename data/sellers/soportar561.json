@@ -1,0 +1,25 @@
+{
+  "sellerId": "soportar561",
+  "sellerName": "SOPORT",
+  "generatedAt": "2026-07-30T18:42:07.902Z",
+  "products": [
+    {
+      "productId": "1770989",
+      "skuId": "293181",
+      "ean": "SPL-SL35P1-SOP",
+      "productName": "Soporte pared 35x25 cm para Starlink V4 – Kit completo listo para instalar",
+      "categoryPath": "Electro y tecnología/Instalaciones",
+      "imageUrl": "https://carrefourar.vteximg.com.br/arquivos/ids/864257/image-3f4a0f3bfacd446ba4ef4f1e80412034.jpg?v=639135830761000000",
+      "price": 88000,
+      "listPrice": 88000,
+      "discountPct": 0,
+      "dateCreated": "2026-05-05T00:00:00.000Z",
+      "daysSinceCreated": 86,
+      "salesRank": 1,
+      "stock": 100,
+      "maxInstallmentsNoInterest": 1,
+      "hasCompleteContent": true,
+      "linkText": "soporte-pared-35x25-cm-para-starlink-v4-–-kit-completo-listo-para-instalar-1770989"
+    }
+  ]
+}

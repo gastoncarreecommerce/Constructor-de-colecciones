@@ -1,0 +1,25 @@
+{
+  "sellerId": "neba791",
+  "sellerName": "NEBA",
+  "generatedAt": "2026-07-30T18:29:55.600Z",
+  "products": [
+    {
+      "productId": "1752941",
+      "skuId": "246936",
+      "ean": "T263-NBA",
+      "productName": "Heladera Top Mount T263 Neba",
+      "categoryPath": "Electro y tecnología/Heladeras y freezers/Heladeras",
+      "imageUrl": "https://carrefourar.vteximg.com.br/arquivos/ids/679823/image-def8f2cf69554679a9371e22959d240d.jpg?v=638872323291970000",
+      "price": 684000,
+      "listPrice": 700000,
+      "discountPct": 2,
+      "dateCreated": "2025-07-04T00:00:00.000Z",
+      "daysSinceCreated": 391,
+      "salesRank": 1,
+      "stock": 100,
+      "maxInstallmentsNoInterest": 1,
+      "hasCompleteContent": true,
+      "linkText": "heladera-top-mount-t263-neba-1752941"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "sellerId": "intecnova657",
+  "sellerName": "Intecnova",
+  "generatedAt": "2026-07-30T18:28:56.134Z",
+  "products": [
+    {
+      "productId": "1743406",
+      "skuId": "220876",
+      "ean": "AU014-INT",
+      "productName": "Joystick Inalámbrico Microsoft Xbox Carbon Black para Series X, S, One y PC con Windows",
+      "categoryPath": "Electro y tecnología/Informática y gaming/Consolas y joysticks",
+      "imageUrl": "https://carrefourar.vteximg.com.br/arquivos/ids/602934/image-c06483a8708a48b8aa3478e9f3aed834.jpg?v=638888746686600000",
+      "price": 135000,
+      "listPrice": 145000,
+      "discountPct": 7,
+      "dateCreated": "2024-12-12T00:00:00.000Z",
+      "daysSinceCreated": 595,
+      "salesRank": 1,
+      "stock": 100,
+      "maxInstallmentsNoInterest": 1,
+      "hasCompleteContent": true,
+      "linkText": "joystick-inalambrico-microsoft-xbox-carbon-black-para-series-x-s-one-y-pc-con-windows-1743406"
+    }
+  ]
+}

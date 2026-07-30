@@ -1,0 +1,25 @@
+{
+  "sellerId": "praga278",
+  "sellerName": "Praga",
+  "generatedAt": "2026-07-30T18:30:08.674Z",
+  "products": [
+    {
+      "productId": "1753341",
+      "skuId": "247951",
+      "ean": "3770017814005-PRG",
+      "productName": "Lavavajillas de Mesada BOB Color Negro Brillante",
+      "categoryPath": "Electro y tecnología/Lavado/Lavavajillas",
+      "imageUrl": "https://carrefourar.vteximg.com.br/arquivos/ids/683457/image-c27f40221a1645d3b3cf5850bdf32ec7.jpg?v=638888873433230000",
+      "price": 999999,
+      "listPrice": 1538460,
+      "discountPct": 35,
+      "dateCreated": "2025-07-23T00:00:00.000Z",
+      "daysSinceCreated": 372,
+      "salesRank": 1,
+      "stock": 10,
+      "maxInstallmentsNoInterest": 1,
+      "hasCompleteContent": true,
+      "linkText": "lavavajillas-de-mesada-bob-color-negro-brillante-1753341"
+    }
+  ]
+}

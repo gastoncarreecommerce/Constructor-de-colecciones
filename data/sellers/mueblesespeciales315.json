@@ -1,0 +1,25 @@
+{
+  "sellerId": "mueblesespeciales315",
+  "sellerName": "Muebles especiales",
+  "generatedAt": "2026-07-30T18:29:53.569Z",
+  "products": [
+    {
+      "productId": "1743211",
+      "skuId": "220063",
+      "ean": "1234EML",
+      "productName": "Cajones de pino simil verdura",
+      "categoryPath": "Hogar/Deco y organización/Decoración",
+      "imageUrl": "https://carrefourar.vteximg.com.br/arquivos/ids/599551/image-cbb602630d4448d882b61b5d09ce96f4.jpg?v=638688250152130000",
+      "price": 75000,
+      "listPrice": 75000,
+      "discountPct": 0,
+      "dateCreated": "2024-12-03T00:00:00.000Z",
+      "daysSinceCreated": 604,
+      "salesRank": 1,
+      "stock": 100,
+      "maxInstallmentsNoInterest": 1,
+      "hasCompleteContent": true,
+      "linkText": "cajones-de-pino-simil-verdura-1743211"
+    }
+  ]
+}
