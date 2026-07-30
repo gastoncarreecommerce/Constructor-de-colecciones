@@ -1,26 +1,8 @@
 [
   {
-    "sellerId": "bangho",
-    "sellerName": "Bangho",
-    "productCount": 0,
-    "generatedAt": "2026-07-30T17:49:43.599Z"
-  },
-  {
-    "sellerId": "electroluxar",
-    "sellerName": "Electrolux",
-    "productCount": 161,
-    "generatedAt": "2026-07-30T17:49:44.468Z"
-  },
-  {
     "sellerId": "seller-demo",
     "sellerName": "Seller Demo (datos de ejemplo)",
     "productCount": 12,
     "generatedAt": "2026-07-29T03:00:00.000Z"
-  },
-  {
-    "sellerId": "whirlpoolarg",
-    "sellerName": "WHIRLPOOL S.A",
-    "productCount": 113,
-    "generatedAt": "2026-07-30T17:49:53.101Z"
   }
 ]

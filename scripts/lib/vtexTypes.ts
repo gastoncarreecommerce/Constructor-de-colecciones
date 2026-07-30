@@ -59,6 +59,8 @@ export interface CatalogSkuById {
   Id: number;
   ProductId: number;
   RefId?: string | null;
+  /** Campo EAN/GTIN real del SKU (distinto de RefId). Puede venir vacío si la cuenta no lo carga. */
+  Ean?: string | null;
   IsActive: boolean;
   DateUpdated?: string;
   ProductDescription?: string;

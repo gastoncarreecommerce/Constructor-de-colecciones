@@ -57,6 +57,8 @@ interface RawSkuRow {
   imageUrl: string;
   price: number;
   listPrice: number;
+  /** commertialOffer.AvailableQuantity del propio seller, tal como viene en la búsqueda. */
+  offerAvailableQuantity: number;
   dateCreated: string;
   linkText: string;
   salesRank: number;
@@ -115,6 +117,7 @@ async function fetchSellerCatalogPages(
           imageUrl: sku.images?.[0]?.imageUrl ?? "",
           price: seller?.commertialOffer?.Price ?? 0,
           listPrice: seller?.commertialOffer?.ListPrice ?? 0,
+          offerAvailableQuantity: seller?.commertialOffer?.AvailableQuantity ?? 0,
           dateCreated: extractDateCreated(product),
           linkText: product.linkText ?? "",
           salesRank: rank,
@@ -129,12 +132,12 @@ async function fetchSellerCatalogPages(
 }
 
 function extractEan(sku: VtexSearchProduct["items"][number]): string {
-  // TODO: confirmar en qué campo viene el EAN para tu catálogo. Probamos
-  // referenceId[].Value primero (patrón común: RefId = EAN), después un
-  // eventual campo "ean" plano. Si ninguno existe, se resuelve después
-  // vía Catalog API (ver resolveMissingEans).
-  const refValue = sku.referenceId?.find((r) => r.Value)?.Value;
-  return refValue ?? sku.ean ?? "";
+  // Confirmado contra datos reales (Electrolux/Whirlpool): referenceId[].Value
+  // es el RefId interno del seller (ej. "900276674-ELX", "WNC11ASDNA-WHR"),
+  // NO un EAN real. Por eso NO lo usamos acá — dejamos vacío a propósito y
+  // resolvemos el EAN real siempre vía Catalog API (ver resolveEans), que
+  // expone un campo Ean dedicado y confiable.
+  return sku.ean ?? "";
 }
 
 function extractCategoryPath(product: VtexSearchProduct): string {
@@ -160,8 +163,16 @@ function extractDateCreated(product: VtexSearchProduct): string {
   return Number.isNaN(date.getTime()) ? "" : date.toISOString();
 }
 
-/** Completa el EAN vía Catalog API para los SKUs que vinieron sin referenceId. */
-async function resolveMissingEans(config: VtexConfig, rows: RawSkuRow[]): Promise<void> {
+/**
+ * Resuelve el EAN real vía Catalog API (campo `Ean` dedicado del SKU) para
+ * todo SKU que no vino con un EAN confiable desde la búsqueda. Si la
+ * cuenta tampoco tiene el campo `Ean` cargado para ese SKU, dejamos `ean`
+ * vacío a propósito en vez de usar el RefId como sustituto: un RefId
+ * incorrecto exportado como EAN rompería el import en Colecciones de
+ * VTEX de forma silenciosa, y preferimos que quede visiblemente incompleto
+ * (`hasCompleteContent: false`) para que se vea en la UI.
+ */
+async function resolveEans(config: VtexConfig, rows: RawSkuRow[]): Promise<void> {
   const missing = rows.filter((r) => !r.ean);
   if (missing.length === 0) return;
 
@@ -171,7 +182,7 @@ async function resolveMissingEans(config: VtexConfig, rows: RawSkuRow[]): Promis
     try {
       const url = `${baseUrl(config)}/api/catalog_system/pvt/sku/stockkeepingunitbyid/${row.skuId}`;
       const sku = await fetchJson<CatalogSkuById>(url, config);
-      row.ean = sku.RefId ?? "";
+      row.ean = sku.Ean ?? "";
     } catch (err) {
       console.warn(`No se pudo resolver EAN para SKU ${row.skuId}:`, (err as Error).message);
     }
@@ -219,7 +230,14 @@ async function fetchInstallments(
   return result;
 }
 
-/** Trae stock disponible total (suma de todos los warehouses) por SKU. */
+/**
+ * Trae stock disponible total (suma de todos los warehouses) por SKU vía
+ * Logistics/Inventory API. Confirmado con datos reales que esta API suele
+ * devolver 0 para SKUs de sellers 3P (esa API refleja inventario propio de
+ * VTEX/WMS, no el feed de stock que reportan los marketplace sellers).
+ * Por eso en buildProduct() el stock final es el máximo entre este valor y
+ * `commertialOffer.AvailableQuantity` (que sí viene poblado para 3P).
+ */
 async function fetchStock(config: VtexConfig, rows: RawSkuRow[]): Promise<Map<string, number>> {
   const result = new Map<string, number>();
 
@@ -244,9 +262,8 @@ async function fetchStock(config: VtexConfig, rows: RawSkuRow[]): Promise<Map<st
 /** Intenta resolver el nombre del seller vía Seller Management API. */
 async function fetchSellerName(config: VtexConfig, sellerId: string): Promise<string> {
   try {
-    // TODO: confirmar el endpoint exacto de Seller Management habilitado en
-    // tu cuenta (puede variar entre /api/seller-register/pvt/sellers/{id}
-    // y variantes del Marketplace API).
+    // Confirmado contra la cuenta de Carrefour AR: este endpoint resuelve
+    // bien el nombre comercial del seller (Bangho, Electrolux, etc).
     const url = `${baseUrl(config)}/api/seller-register/pvt/sellers/${sellerId}`;
     const seller = await fetchJson<{ name?: string; Name?: string }>(url, config);
     return seller.name ?? seller.Name ?? sellerId;
@@ -285,7 +302,7 @@ function buildProduct(
     dateCreated: row.dateCreated,
     daysSinceCreated,
     salesRank: row.salesRank,
-    stock: stock.get(row.skuId) ?? 0,
+    stock: Math.max(stock.get(row.skuId) ?? 0, row.offerAvailableQuantity),
     maxInstallmentsNoInterest: installments.get(row.skuId) ?? 0,
     hasCompleteContent,
     linkText: row.linkText,
@@ -341,7 +358,7 @@ async function main() {
     console.warn(`[${sellerId}] El seller no tiene productos activos o el filtro no matcheó nada.`);
   }
 
-  await resolveMissingEans(config, rows);
+  await resolveEans(config, rows);
 
   console.log(`[${sellerId}] Simulando cuotas sin interés...`);
   const installments = await fetchInstallments(config, sellerId, rows);
