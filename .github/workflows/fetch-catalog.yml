@@ -12,15 +12,16 @@ on:
         default: ""
 
 env:
-  # Lista default de sellers que se refrescan todas las noches.
-  # (bangho es un seller de prueba que no tiene catálogo real, sacado del
-  # default). Ver scripts/lib/sellerMaster.ts para el maestro completo de
-  # sellers 3P de Carrefour AR — sumá más ids acá separados por coma.
-  DEFAULT_SELLER_IDS: "electroluxar,whirlpoolarg"
+  # Lista default de sellers que se refrescan todas las noches: todo el
+  # maestro de scripts/lib/sellerMaster.ts, salvo "bangho" (seller de
+  # prueba sin catálogo real, confirmado). Si algún seller da 0 productos
+  # o falla, el job lo loguea y sigue con el resto sin cortar la corrida.
+  DEFAULT_SELLER_IDS: "abaco284,aircomputers546,americanwood705,anubisdecoracion261,Autodo,awaresolutions923,awaresolutionssrl189,beautysas,Bebitos,bigstarsar,blackmusic902,brogas700,buhl040,bulonfer,bydsudamericana031,calefactorescalden943,calm328,carrelloar624,clubdigital656,codini088,colchonesysommier288,CRF,ctcgroup940,ctcproductos740,dehuka404,demelf394,derpacomar064,dielfe771,districolor768,districolor804,donacero930,dvigi943,eczanepharma170,electroluxar,emcmuebles005,emoodmarket,enasport189,estelar454,exosa541,ferreydeco793,gasei472,grupomarquez012,haustore986,hidrolit736,hispanos470,hogarisnova327,homekong441,intecnova657,internationalhomesa717,kamadoargentino563,kiluga771,kitsolar316,laplanchetta301,lilasense516,limansky653,lumina946,luxom345,magazzinoar,mantra171,mgsolucionsa519,microbell122,mueblesespeciales315,mundopino165,neba791,neoseg957,ohgiftcard537,ortopedialibertad288,outin691,pampadeacero948,phidigital143,pinataar,pinataarCRF,potenzaemarketsa179,praga278,prestigio1,Producteca225119,Producteca232302,Producteca232621,Producteca237680,Producteca238451,Producteca238567,Producteca238818,Producteca239254,Producteca241872,Producteca241968,Producteca242766,Producteca246251,Producteca246437,Producteca246519,Producteca246643,Producteca247492,Producteca247683,Producteca249023,Producteca249357,Producteca249773,Producteca251086,Producteca251428,Producteca252062,Producteca70438,puntodeportivoar,rockinroll106,rua839,sccortinasrollers240,sharecomputacion867,shopwide119,soportar561,springwall441,sungreensrl102,tecnofull391,tenacta582,tiendasdigitalesar,todotodo061,topmega421,turboblender168,tutiendaonline271,unitecsa564,universopinturerias,Vexi,vexistore751,vexistorear,vinson363,vmpsa473,whirlpoolarg,wolke303,wsabiskin470,xcientoargentino189"
 
 jobs:
   fetch-catalog:
     runs-on: ubuntu-latest
+    timeout-minutes: 180
     permissions:
       contents: write
     steps:
