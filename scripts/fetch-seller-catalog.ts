@@ -32,9 +32,9 @@ import {
 import type {
   CatalogSkuById,
   CheckoutSimulationResponse,
-  IntelligentSearchProduct,
-  IntelligentSearchResponse,
   InventoryResponse,
+  VtexSearchProduct,
+  VtexSearchResponse,
 } from "./lib/vtexTypes.js";
 import type { Product, SellerCatalog, SellerIndex, SellerIndexEntry } from "../src/lib/types.js";
 
@@ -63,10 +63,17 @@ interface RawSkuRow {
 }
 
 /**
- * Trae el catálogo completo del seller, paginando la Intelligent Search API,
- * ordenado por ventas (O=OrderByTopSaleDESC). Como VTEX no expone unidades
- * vendidas directamente, usamos la posición en este orden como salesRank
- * (1 = más vendido en los últimos 90 días).
+ * Trae el catálogo completo del seller, paginando la Search API legacy de
+ * VTEX (`/api/catalog_system/pub/products/search`), ordenado por ventas
+ * (O=OrderByTopSaleDESC). Como VTEX no expone unidades vendidas
+ * directamente, usamos la posición en este orden como salesRank (1 = más
+ * vendido en los últimos 90 días).
+ *
+ * Usamos esta API (y no Intelligent Search) porque en una corrida real
+ * contra la cuenta de Carrefour AR, Intelligent Search ignoraba el filtro
+ * `fq=seller:{sellerId}` y devolvía el mismo top-ventas genérico sin
+ * filtrar para cualquier sellerId. La Search API legacy soporta
+ * `fq=sellerId:{sellerId}` de forma documentada.
  */
 async function fetchSellerCatalogPages(
   config: VtexConfig,
@@ -78,23 +85,26 @@ async function fetchSellerCatalogPages(
   // eslint-disable-next-line no-constant-condition
   while (true) {
     const to = from + PAGE_SIZE - 1;
-    // TODO: confirmar el path exacto de facets para tu cuenta. Sin facets
-    // (búsqueda plana filtrada solo por seller) suele alcanzar con dejar el
-    // segmento vacío, pero algunas cuentas requieren "/*" o un facet dummy.
     const url =
-      `${baseUrl(config)}/api/io/_v/api/intelligent-search/product_search` +
-      `?fq=seller:${encodeURIComponent(sellerId)}` +
+      `${baseUrl(config)}/api/catalog_system/pub/products/search` +
+      `?fq=sellerId:${encodeURIComponent(sellerId)}` +
       `&sc=${encodeURIComponent(config.salesChannel)}` +
       `&O=OrderByTopSaleDESC` +
       `&_from=${from}&_to=${to}`;
 
-    const page = await fetchJson<IntelligentSearchResponse>(url, config);
-    const products = page.products ?? [];
-    if (products.length === 0) break;
+    const products = await fetchJson<VtexSearchResponse>(url, config);
+    if (!products || products.length === 0) break;
 
     for (const product of products) {
       for (const sku of product.items ?? []) {
         const seller = sku.sellers?.find((s) => s.sellerId === sellerId) ?? sku.sellers?.[0];
+        // La Search API legacy no siempre respeta fq=sellerId de forma
+        // estricta (algunas cuentas devuelven productos donde el seller
+        // pedido es apenas uno de varios sellers listados). Si el SKU no
+        // tiene efectivamente ese seller, lo salteamos para no ensuciar el
+        // catálogo con productos de otro seller.
+        if (!sku.sellers?.some((s) => s.sellerId === sellerId)) continue;
+
         rank += 1;
         rows.push({
           productId: product.productId,
@@ -118,7 +128,7 @@ async function fetchSellerCatalogPages(
   return rows;
 }
 
-function extractEan(sku: IntelligentSearchProduct["items"][number]): string {
+function extractEan(sku: VtexSearchProduct["items"][number]): string {
   // TODO: confirmar en qué campo viene el EAN para tu catálogo. Probamos
   // referenceId[].Value primero (patrón común: RefId = EAN), después un
   // eventual campo "ean" plano. Si ninguno existe, se resuelve después
@@ -127,7 +137,7 @@ function extractEan(sku: IntelligentSearchProduct["items"][number]): string {
   return refValue ?? sku.ean ?? "";
 }
 
-function extractCategoryPath(product: IntelligentSearchProduct): string {
+function extractCategoryPath(product: VtexSearchProduct): string {
   if (product.categories && product.categories.length > 0) {
     // VTEX suele devolver categorías como "/Departamento/Categoria/Subcategoria/"
     return product.categories[0].replace(/^\/|\/$/g, "");
@@ -135,11 +145,19 @@ function extractCategoryPath(product: IntelligentSearchProduct): string {
   return "";
 }
 
-function extractDateCreated(product: IntelligentSearchProduct): string {
-  // TODO: confirmar el campo real de fecha de alta. releaseDate a veces
-  // representa la fecha de "lanzamiento" comercial (a futuro o pasada),
-  // no necesariamente la fecha de creación en catálogo.
-  return product.releaseDate ?? "";
+/**
+ * Normaliza releaseDate a ISO string. Confirmado contra datos reales que
+ * VTEX puede devolver esto como epoch en milisegundos (number) además de
+ * como ISO string, dependiendo de la cuenta.
+ *
+ * TODO: confirmar si releaseDate representa fecha de alta en catálogo o
+ * fecha de "lanzamiento" comercial (pueden no ser lo mismo).
+ */
+function extractDateCreated(product: VtexSearchProduct): string {
+  const raw = product.releaseDate;
+  if (raw === undefined || raw === null || raw === "") return "";
+  const date = new Date(raw);
+  return Number.isNaN(date.getTime()) ? "" : date.toISOString();
 }
 
 /** Completa el EAN vía Catalog API para los SKUs que vinieron sin referenceId. */

@@ -9,7 +9,7 @@ export a CSV listo para importar en Colecciones de VTEX.
 
 ```
 [GitHub Action nocturno]
-   → pega a las APIs de VTEX (Intelligent Search, Catalog, Checkout, Logistics)
+   → pega a las APIs de VTEX (Search legacy, Catalog, Checkout, Logistics)
    → arma data/sellers/{sellerId}.json + data/sellers/index.json
    → commitea al repo → push a main
 

@@ -2,13 +2,18 @@
  * Shapes parciales de las respuestas de VTEX que consumimos.
  * Son intencionalmente laxos (la mayoría de los campos son opcionales)
  * porque las respuestas reales de VTEX varían según configuración de la
- * cuenta (Intelligent Search vs Legacy Search, specs habilitadas, etc).
+ * cuenta (specs habilitadas, etc).
  *
- * TODO: confirmar contra una respuesta real de la cuenta de Carrefour AR
- * los nombres exactos de campo marcados abajo.
+ * Usamos la Search API legacy (`/api/catalog_system/pub/products/search`)
+ * en vez de Intelligent Search para traer el catálogo de un seller: contra
+ * la cuenta de Carrefour AR, Intelligent Search ignoraba silenciosamente
+ * `fq=seller:{sellerId}` y devolvía el top-ventas general sin filtrar
+ * (confirmado en la corrida real del 2026-07-30 contra 3 sellers, que
+ * devolvió el mismo catálogo genérico para los tres). La Search API legacy
+ * soporta `fq=sellerId:{sellerId}` de forma documentada y confiable.
  */
 
-export interface IntelligentSearchSku {
+export interface VtexSearchSku {
   itemId: string;
   name?: string;
   nameComplete?: string;
@@ -28,25 +33,26 @@ export interface IntelligentSearchSku {
   }>;
 }
 
-export interface IntelligentSearchProduct {
+export interface VtexSearchProduct {
   productId: string;
   productName: string;
   linkText?: string;
   brand?: string;
   categories?: string[];
   categoriesIds?: string[];
-  releaseDate?: string;
-  // TODO: confirmar el nombre exacto del campo de fecha de alta del producto;
-  // en algunas cuentas viene como "releaseDate", en otras hay que resolverlo
-  // aparte vía Catalog API (campo "DateOfCreation" del producto).
-  items: IntelligentSearchSku[];
+  // Confirmado contra datos reales: VTEX puede devolver esto como epoch en
+  // milisegundos (number) o como ISO string según la cuenta/endpoint. Ver
+  // extractDateCreated() en fetch-seller-catalog.ts, que normaliza ambos
+  // casos a ISO string antes de guardar en el JSON final.
+  releaseDate?: string | number;
+  items: VtexSearchSku[];
 }
 
-export interface IntelligentSearchResponse {
-  products: IntelligentSearchProduct[];
-  recordsFiltered?: number;
-  correction?: unknown;
-}
+/**
+ * La Search API legacy devuelve un array de productos directo (sin wrapper
+ * `{ products: [...] }` como Intelligent Search).
+ */
+export type VtexSearchResponse = VtexSearchProduct[];
 
 /** Respuesta (parcial) de GET /api/catalog_system/pvt/sku/stockkeepingunitbyid/{skuId} */
 export interface CatalogSkuById {

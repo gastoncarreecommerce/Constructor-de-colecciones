@@ -19,7 +19,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { baseUrl, loadVtexConfigFromEnv } from "../scripts/lib/vtexClient";
 
 const ALLOWED_PATH_PREFIXES = [
-  "/api/io/_v/api/intelligent-search/product_search",
+  "/api/catalog_system/pub/products/search",
   "/api/catalog_system/pvt/sku/stockkeepingunitbyid/",
   "/api/logistics/pvt/inventory/skus/",
   "/api/checkout/pub/orderForms/simulation",
