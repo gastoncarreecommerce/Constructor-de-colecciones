@@ -13,8 +13,10 @@ on:
 
 env:
   # Lista default de sellers que se refrescan todas las noches.
-  # TODO: reemplazar "seller-demo" por los sellerIds reales de Carrefour AR.
-  DEFAULT_SELLER_IDS: "seller-demo"
+  # Subset inicial de validación (ver scripts/lib/sellerMaster.ts para el
+  # maestro completo de sellers 3P de Carrefour AR). Una vez confirmado que
+  # el pipeline anda bien con estos, sumar más ids acá separados por coma.
+  DEFAULT_SELLER_IDS: "bangho,electroluxar,whirlpoolarg"
 
 jobs:
   fetch-catalog:
