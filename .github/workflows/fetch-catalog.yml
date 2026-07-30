@@ -1,0 +1,75 @@
+name: Fetch VTEX Seller Catalogs
+
+on:
+  schedule:
+    # 06:00 UTC = 03:00 ART. Ajustá el horario a gusto.
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+    inputs:
+      sellerIds:
+        description: "IDs de seller separados por coma (vacío = usa DEFAULT_SELLER_IDS de este workflow)"
+        required: false
+        default: ""
+
+env:
+  # Lista default de sellers que se refrescan todas las noches.
+  # TODO: reemplazar "seller-demo" por los sellerIds reales de Carrefour AR.
+  DEFAULT_SELLER_IDS: "seller-demo"
+
+jobs:
+  fetch-catalog:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve seller IDs
+        id: sellers
+        run: |
+          INPUT_IDS="${{ github.event.inputs.sellerIds }}"
+          if [ -n "$INPUT_IDS" ]; then
+            IDS="$INPUT_IDS"
+          else
+            IDS="$DEFAULT_SELLER_IDS"
+          fi
+          echo "ids=$IDS" >> "$GITHUB_OUTPUT"
+
+      - name: Fetch catalogs
+        env:
+          VTEX_ACCOUNT_NAME: ${{ secrets.VTEX_ACCOUNT_NAME }}
+          VTEX_APP_KEY: ${{ secrets.VTEX_APP_KEY }}
+          VTEX_APP_TOKEN: ${{ secrets.VTEX_APP_TOKEN }}
+          VTEX_SALES_CHANNEL: ${{ secrets.VTEX_SALES_CHANNEL }}
+        run: |
+          IFS=',' read -ra SELLER_ARRAY <<< "${{ steps.sellers.outputs.ids }}"
+          for sellerId in "${SELLER_ARRAY[@]}"; do
+            trimmed=$(echo "$sellerId" | xargs)
+            if [ -n "$trimmed" ]; then
+              echo "::group::Fetching catalog for $trimmed"
+              npm run fetch-catalog -- "$trimmed"
+              echo "::endgroup::"
+            fi
+          done
+
+      - name: Commit and push updated catalogs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/sellers
+          if git diff --cached --quiet; then
+            echo "No hay cambios en los catálogos, no se commitea nada."
+          else
+            git commit -m "chore: actualizar catálogos de sellers [skip ci]"
+            git push
+          fi
