@@ -132,12 +132,12 @@ async function fetchSellerCatalogPages(
 }
 
 function extractEan(sku: VtexSearchProduct["items"][number]): string {
-  // Confirmado contra datos reales (Electrolux/Whirlpool): referenceId[].Value
-  // es el RefId interno del seller (ej. "900276674-ELX", "WNC11ASDNA-WHR"),
-  // NO un EAN real. Por eso NO lo usamos acá — dejamos vacío a propósito y
-  // resolvemos el EAN real siempre vía Catalog API (ver resolveEans), que
-  // expone un campo Ean dedicado y confiable.
-  return sku.ean ?? "";
+  // referenceId[].Value trae el RefId interno del seller (ej.
+  // "900276674-ELX", "WNC11ASDNA-WHR"). Confirmado con Carrefour que este
+  // identificador es el esperado/correcto para este flujo (no hace falta
+  // un EAN/GTIN de 13 dígitos), así que lo usamos como valor principal.
+  const refValue = sku.referenceId?.find((r) => r.Value)?.Value;
+  return refValue ?? sku.ean ?? "";
 }
 
 function extractCategoryPath(product: VtexSearchProduct): string {
@@ -163,16 +163,8 @@ function extractDateCreated(product: VtexSearchProduct): string {
   return Number.isNaN(date.getTime()) ? "" : date.toISOString();
 }
 
-/**
- * Resuelve el EAN real vía Catalog API (campo `Ean` dedicado del SKU) para
- * todo SKU que no vino con un EAN confiable desde la búsqueda. Si la
- * cuenta tampoco tiene el campo `Ean` cargado para ese SKU, dejamos `ean`
- * vacío a propósito en vez de usar el RefId como sustituto: un RefId
- * incorrecto exportado como EAN rompería el import en Colecciones de
- * VTEX de forma silenciosa, y preferimos que quede visiblemente incompleto
- * (`hasCompleteContent: false`) para que se vea en la UI.
- */
-async function resolveEans(config: VtexConfig, rows: RawSkuRow[]): Promise<void> {
+/** Completa el EAN (RefId) vía Catalog API para los SKUs que vinieron sin referenceId. */
+async function resolveMissingEans(config: VtexConfig, rows: RawSkuRow[]): Promise<void> {
   const missing = rows.filter((r) => !r.ean);
   if (missing.length === 0) return;
 
@@ -182,7 +174,7 @@ async function resolveEans(config: VtexConfig, rows: RawSkuRow[]): Promise<void>
     try {
       const url = `${baseUrl(config)}/api/catalog_system/pvt/sku/stockkeepingunitbyid/${row.skuId}`;
       const sku = await fetchJson<CatalogSkuById>(url, config);
-      row.ean = sku.Ean ?? "";
+      row.ean = sku.RefId ?? sku.Ean ?? "";
     } catch (err) {
       console.warn(`No se pudo resolver EAN para SKU ${row.skuId}:`, (err as Error).message);
     }
@@ -358,7 +350,7 @@ async function main() {
     console.warn(`[${sellerId}] El seller no tiene productos activos o el filtro no matcheó nada.`);
   }
 
-  await resolveEans(config, rows);
+  await resolveMissingEans(config, rows);
 
   console.log(`[${sellerId}] Simulando cuotas sin interés...`);
   const installments = await fetchInstallments(config, sellerId, rows);
