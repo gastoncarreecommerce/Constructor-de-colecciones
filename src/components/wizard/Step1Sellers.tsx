@@ -41,15 +41,6 @@ export default function Step1Sellers({
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-5">
-      {onBack && (
-        <button
-          type="button"
-          onClick={onBack}
-          className="self-start text-sm text-slate-500 hover:text-slate-700"
-        >
-          ← Volver
-        </button>
-      )}
       <div>
         <h2 className="text-lg font-semibold text-slate-900">¿Con qué sellers armamos la colección?</h2>
         <p className="text-sm text-slate-500">
@@ -128,10 +119,21 @@ export default function Step1Sellers({
       {nextError && <p className="text-sm text-red-600">{nextError}</p>}
 
       <div className="flex items-center justify-between border-t border-slate-200 pt-4">
-        <span className="text-sm text-slate-500">
-          {selectedSellerIds.length} seller{selectedSellerIds.length === 1 ? "" : "s"} seleccionado
-          {selectedSellerIds.length === 1 ? "" : "s"}
-        </span>
+        <div className="flex items-center gap-3">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-slate-50"
+            >
+              ← Atrás
+            </button>
+          )}
+          <span className="text-sm text-slate-500">
+            {selectedSellerIds.length} seller{selectedSellerIds.length === 1 ? "" : "s"} seleccionado
+            {selectedSellerIds.length === 1 ? "" : "s"}
+          </span>
+        </div>
         <button
           type="button"
           onClick={onNext}
