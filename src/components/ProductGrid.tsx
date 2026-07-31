@@ -20,6 +20,11 @@ function formatPrice(value: number): string {
   return value.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
 }
 
+/** URL pública del producto en carrefour.com.ar (patrón estándar de VTEX: /{linkText}/p). */
+function productUrl(linkText: string): string | null {
+  return linkText ? `https://www.carrefour.com.ar/${linkText}/p` : null;
+}
+
 export default function ProductGrid({
   scored,
   allProducts,
@@ -94,24 +99,40 @@ export default function ProductGrid({
       </div>
 
       <div className="max-h-[32rem] overflow-x-auto overflow-y-auto">
-        <table className="w-full min-w-[900px] border-collapse text-sm">
+        <table className="w-full table-fixed border-collapse text-sm">
+          <colgroup>
+            <col className="w-8" />
+            <col className="w-[31%]" />
+            <col className="w-[8%]" />
+            <col className="w-[12%]" />
+            <col className="w-[10%]" />
+            <col className="w-[8%]" />
+            <col className="w-[6%]" />
+            <col className="w-[8%]" />
+            <col className="w-[7%]" />
+          </colgroup>
           <thead className="sticky top-0 bg-slate-50">
             <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
-              <th className="px-2 py-2">Incluir</th>
-              <th className="px-2 py-2">Producto</th>
-              <th className="px-2 py-2">Seller</th>
-              <th className="px-2 py-2">Categoría</th>
-              <th className="px-2 py-2">EAN</th>
-              <th className="px-2 py-2 text-right">Precio</th>
-              <th className="px-2 py-2 text-right">Sales rank</th>
-              <th className="px-2 py-2 text-center">Sin interés</th>
-              <th className="px-2 py-2 text-right">Score</th>
+              <th className="truncate px-1 py-2" title="Incluir">
+                ✓
+              </th>
+              <th className="truncate px-2 py-2">Producto</th>
+              <th className="truncate px-2 py-2">Seller</th>
+              <th className="truncate px-2 py-2">Categoría</th>
+              <th className="truncate px-2 py-2">EAN</th>
+              <th className="truncate px-2 py-2 text-right">Precio</th>
+              <th className="truncate px-2 py-2 text-right">Rank</th>
+              <th className="truncate px-2 py-2 text-center" title="Cuotas sin interés">
+                S/int
+              </th>
+              <th className="truncate px-2 py-2 text-right">Score</th>
             </tr>
           </thead>
           <tbody>
             {visibleRows.map((p) => {
               const included = !excludedSkuIds.has(p.skuId);
               const inAutoCut = autoSelectedSkuIds.has(p.skuId);
+              const url = productUrl(p.linkText);
               return (
                 <tr
                   key={p.skuId}
@@ -126,27 +147,47 @@ export default function ProductGrid({
                     />
                   </td>
                   <td className="px-2 py-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
                       {p.imageUrl && (
                         <img
                           src={p.imageUrl}
                           alt=""
-                          className="h-8 w-8 rounded object-cover"
+                          className="h-8 w-8 shrink-0 rounded object-cover"
                           loading="lazy"
                         />
                       )}
-                      <span className="max-w-xs truncate">{p.productName}</span>
+                      {url ? (
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={p.productName}
+                          className="min-w-0 truncate text-indigo-600 hover:underline"
+                        >
+                          {p.productName}
+                        </a>
+                      ) : (
+                        <span title={p.productName} className="min-w-0 truncate">
+                          {p.productName}
+                        </span>
+                      )}
                     </div>
                   </td>
-                  <td className="px-2 py-2 text-slate-500">{p.sellerName}</td>
-                  <td className="px-2 py-2 text-slate-500">{p.categoryPath}</td>
-                  <td className="px-2 py-2 font-mono text-xs">{p.ean}</td>
+                  <td className="truncate px-2 py-2 text-slate-500" title={p.sellerName}>
+                    {p.sellerName}
+                  </td>
+                  <td className="truncate px-2 py-2 text-slate-500" title={p.categoryPath}>
+                    {p.categoryPath}
+                  </td>
+                  <td className="truncate px-2 py-2 font-mono text-xs" title={p.ean}>
+                    {p.ean}
+                  </td>
                   <td className="px-2 py-2 text-right tabular-nums">{formatPrice(p.price)}</td>
                   <td className="px-2 py-2 text-right tabular-nums">#{p.salesRank}</td>
                   <td className="px-2 py-2 text-center">
                     {p.maxInstallmentsNoInterest > 0 && (
-                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
-                        {p.maxInstallmentsNoInterest}x sin interés
+                      <span className="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                        {p.maxInstallmentsNoInterest}x
                       </span>
                     )}
                   </td>
