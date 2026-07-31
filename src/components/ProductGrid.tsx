@@ -10,7 +10,8 @@ interface ProductGridProps {
   allProducts: SellerTaggedProduct[];
   excludedSkuIds: Set<string>;
   onToggleExclude: (skuId: string) => void;
-  topN: number;
+  /** SkuIds que el algoritmo de corte automático eligió (puede no ser contiguo si hay intercalado por seller). */
+  autoSelectedSkuIds: Set<string>;
   finalSkuIds: Set<string>;
   onAddManual: (product: SellerTaggedProduct) => void;
 }
@@ -24,7 +25,7 @@ export default function ProductGrid({
   allProducts,
   excludedSkuIds,
   onToggleExclude,
-  topN,
+  autoSelectedSkuIds,
   finalSkuIds,
   onAddManual,
 }: ProductGridProps) {
@@ -52,9 +53,7 @@ export default function ProductGrid({
         <h2 className="text-sm font-semibold text-slate-800">
           Resultados ({scored.length} productos tras filtros)
         </h2>
-        <span className="text-xs text-slate-500">
-          Corte automático: primeros {topN} por score
-        </span>
+        <span className="text-xs text-slate-500">Corte automático: {autoSelectedSkuIds.size} productos</span>
       </div>
 
       <div className="relative">
@@ -110,9 +109,9 @@ export default function ProductGrid({
             </tr>
           </thead>
           <tbody>
-            {visibleRows.map((p, index) => {
+            {visibleRows.map((p) => {
               const included = !excludedSkuIds.has(p.skuId);
-              const inAutoCut = included && index < topN;
+              const inAutoCut = autoSelectedSkuIds.has(p.skuId);
               return (
                 <tr
                   key={p.skuId}

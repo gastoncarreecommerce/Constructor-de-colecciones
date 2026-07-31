@@ -34,6 +34,8 @@ export default function App() {
   const [stockMode, setStockMode] = useState<StockMode>("prefer-high-stock");
   const [hardFilters, setHardFilters] = useState<HardFilters>(DEFAULT_HARD_FILTERS);
   const [topN, setTopN] = useState(DEFAULT_TOP_N);
+  const [noTopLimit, setNoTopLimit] = useState(false);
+  const [interleaveBySeller, setInterleaveBySeller] = useState(true);
 
   const [excludedSkuIds, setExcludedSkuIds] = useState<Set<string>>(new Set());
   const [manualAdditions, setManualAdditions] = useState<SellerTaggedProduct[]>([]);
@@ -112,10 +114,38 @@ export default function App() {
   }, [mergedProducts, manualAdditions]);
 
   // Selección automática: los mejores `topN` productos elegibles (no excluidos).
+  // Con interleaveBySeller activo, en vez de cortar los N mejores del pool global
+  // (donde un seller con mucho catálogo/venta puede acaparar todo), se turna:
+  // el mejor producto pendiente de cada seller por vuelta, hasta llegar a N.
   const autoSelectedSkuIds = useMemo(() => {
     const eligible = scored.filter((p) => !excludedSkuIds.has(p.skuId));
-    return eligible.slice(0, topN).map((p) => p.skuId);
-  }, [scored, excludedSkuIds, topN]);
+    const limit = noTopLimit ? eligible.length : topN;
+
+    if (!interleaveBySeller) {
+      return eligible.slice(0, limit).map((p) => p.skuId);
+    }
+
+    const bySeller = new Map<string, typeof eligible>();
+    for (const product of eligible) {
+      const group = bySeller.get(product.sellerId);
+      if (group) group.push(product);
+      else bySeller.set(product.sellerId, [product]);
+    }
+    const sellerGroups = [...bySeller.values()];
+
+    const result: string[] = [];
+    for (let round = 0; result.length < limit; round += 1) {
+      let addedInRound = false;
+      for (const group of sellerGroups) {
+        if (round >= group.length) continue;
+        result.push(group[round].skuId);
+        addedInRound = true;
+        if (result.length >= limit) break;
+      }
+      if (!addedInRound) break; // ya no quedan más productos elegibles en ningún seller
+    }
+    return result;
+  }, [scored, excludedSkuIds, topN, noTopLimit, interleaveBySeller]);
 
   const baseFinalSkuIds = useMemo(() => {
     const manualIds = manualAdditions
@@ -185,6 +215,8 @@ export default function App() {
     setStockMode("prefer-high-stock");
     setHardFilters(DEFAULT_HARD_FILTERS);
     setTopN(DEFAULT_TOP_N);
+    setNoTopLimit(false);
+    setInterleaveBySeller(true);
     setExcludedSkuIds(new Set());
     setManualAdditions([]);
     setFinalOrder([]);
@@ -232,6 +264,11 @@ export default function App() {
             onHardFiltersChange={setHardFilters}
             topN={topN}
             onTopNChange={setTopN}
+            noTopLimit={noTopLimit}
+            onNoTopLimitChange={setNoTopLimit}
+            interleaveBySeller={interleaveBySeller}
+            onInterleaveBySellerChange={setInterleaveBySeller}
+            sellerCount={catalogs.length}
             onBack={() => setStep(1)}
             onNext={() => setStep(3)}
           />
@@ -243,7 +280,7 @@ export default function App() {
             allProducts={mergedProducts}
             excludedSkuIds={excludedSkuIds}
             onToggleExclude={handleToggleExclude}
-            topN={topN}
+            autoSelectedSkuIds={new Set(autoSelectedSkuIds)}
             finalSkuIds={new Set(finalOrder)}
             onAddManual={handleAddManual}
             finalProducts={finalProducts}

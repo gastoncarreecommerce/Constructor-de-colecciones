@@ -13,6 +13,11 @@ interface Step2CriteriaProps {
   onHardFiltersChange: (filters: HardFilters) => void;
   topN: number;
   onTopNChange: (value: number) => void;
+  noTopLimit: boolean;
+  onNoTopLimitChange: (value: boolean) => void;
+  interleaveBySeller: boolean;
+  onInterleaveBySellerChange: (value: boolean) => void;
+  sellerCount: number;
   onBack: () => void;
   onNext: () => void;
 }
@@ -25,6 +30,7 @@ const IMPORTANCE_LEVELS: Array<{ label: string; value: number }> = [
 ];
 
 const DEFAULT_IMPORTANCE_ON_ACTIVATE = 75;
+const FALLBACK_TOP_N = 40;
 
 const CRITERIA: Array<{ key: keyof ScoringWeights; label: string; description: string }> = [
   {
@@ -84,6 +90,11 @@ export default function Step2Criteria({
   onHardFiltersChange,
   topN,
   onTopNChange,
+  noTopLimit,
+  onNoTopLimitChange,
+  interleaveBySeller,
+  onInterleaveBySellerChange,
+  sellerCount,
   onBack,
   onNext,
 }: Step2CriteriaProps) {
@@ -107,7 +118,16 @@ export default function Step2Criteria({
   function handleSavePreset() {
     const name = presetName.trim();
     if (!name) return;
-    savePreset({ name, weights, noInterestThreshold, stockMode, hardFilters });
+    savePreset({
+      name,
+      weights,
+      noInterestThreshold,
+      stockMode,
+      hardFilters,
+      topN,
+      noTopLimit,
+      interleaveBySeller,
+    });
     setPresets(listPresets());
     setSelectedPreset(name);
     setPresetName("");
@@ -121,6 +141,10 @@ export default function Step2Criteria({
     onNoInterestThresholdChange(preset.noInterestThreshold);
     onStockModeChange(preset.stockMode);
     onHardFiltersChange(preset.hardFilters);
+    // Fallback para presets guardados antes de que existieran estos campos.
+    onTopNChange(preset.topN ?? FALLBACK_TOP_N);
+    onNoTopLimitChange(preset.noTopLimit ?? false);
+    onInterleaveBySellerChange(preset.interleaveBySeller ?? true);
   }
 
   function handleDeletePreset() {
@@ -241,6 +265,58 @@ export default function Step2Criteria({
         </p>
       )}
 
+      <div className="flex flex-col gap-4 rounded-lg border border-indigo-200 bg-indigo-50/40 p-4">
+        <h3 className="text-sm font-semibold text-slate-800">Composición final</h3>
+
+        <label className="flex items-center justify-between text-sm text-slate-700">
+          <span className="font-medium">Cantidad final de productos</span>
+          <span className="flex items-center gap-2">
+            <input
+              type="number"
+              min={1}
+              value={topN}
+              disabled={noTopLimit}
+              onChange={(e) => onTopNChange(Number(e.target.value))}
+              className="w-20 rounded-md border border-slate-300 px-2 py-1 text-right disabled:bg-slate-100 disabled:text-slate-400"
+            />
+          </span>
+        </label>
+        <label className="flex items-center justify-between text-sm text-slate-600">
+          <span>Sin límite (traer todos los que matcheen los filtros)</span>
+          <input
+            type="checkbox"
+            checked={noTopLimit}
+            onChange={(e) => onNoTopLimitChange(e.target.checked)}
+            className="h-4 w-4 accent-indigo-600"
+          />
+        </label>
+
+        <div className="border-t border-indigo-100 pt-3">
+          <label className="flex items-center justify-between text-sm text-slate-700">
+            <span>
+              <span className="font-medium">Intercalar por seller (round-robin)</span>
+              <span className="block text-xs font-normal text-slate-500">
+                En vez de agarrar los N mejores de todo el pool (donde un seller grande puede
+                comerse toda la colección), va turnando: el mejor de cada seller, después el
+                segundo mejor de cada uno, y así.
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              checked={interleaveBySeller}
+              onChange={(e) => onInterleaveBySellerChange(e.target.checked)}
+              disabled={sellerCount < 2}
+              className="h-4 w-4 shrink-0 accent-indigo-600 disabled:opacity-40"
+            />
+          </label>
+          {sellerCount < 2 && (
+            <p className="mt-1 text-xs text-slate-400">
+              Elegiste un solo seller, así que esto no tiene efecto.
+            </p>
+          )}
+        </div>
+      </div>
+
       <details className="rounded-lg border border-slate-200 bg-white p-4">
         <summary className="cursor-pointer text-sm font-semibold text-slate-800">Filtros avanzados</summary>
         <div className="mt-4 flex flex-col gap-3">
@@ -297,16 +373,6 @@ export default function Step2Criteria({
                 });
               }}
               className="w-16 rounded-md border border-slate-300 px-2 py-1 text-right"
-            />
-          </label>
-          <label className="flex items-center justify-between text-sm text-slate-600">
-            <span className="font-medium text-slate-800">Cantidad final de productos</span>
-            <input
-              type="number"
-              min={1}
-              value={topN}
-              onChange={(e) => onTopNChange(Number(e.target.value))}
-              className="w-20 rounded-md border border-slate-300 px-2 py-1 text-right"
             />
           </label>
         </div>

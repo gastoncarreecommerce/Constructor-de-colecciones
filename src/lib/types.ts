@@ -93,4 +93,7 @@ export interface WeightPreset {
   noInterestThreshold: number;
   stockMode: StockMode;
   hardFilters: HardFilters;
+  topN: number;
+  noTopLimit: boolean;
+  interleaveBySeller: boolean;
 }

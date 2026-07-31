@@ -7,7 +7,7 @@ interface Step3ReviewProps {
   allProducts: SellerTaggedProduct[];
   excludedSkuIds: Set<string>;
   onToggleExclude: (skuId: string) => void;
-  topN: number;
+  autoSelectedSkuIds: Set<string>;
   finalSkuIds: Set<string>;
   onAddManual: (product: SellerTaggedProduct) => void;
   finalProducts: SellerTaggedProduct[];
@@ -22,7 +22,7 @@ export default function Step3Review({
   allProducts,
   excludedSkuIds,
   onToggleExclude,
-  topN,
+  autoSelectedSkuIds,
   finalSkuIds,
   onAddManual,
   finalProducts,
@@ -48,7 +48,7 @@ export default function Step3Review({
           allProducts={allProducts}
           excludedSkuIds={excludedSkuIds}
           onToggleExclude={onToggleExclude}
-          topN={topN}
+          autoSelectedSkuIds={autoSelectedSkuIds}
           finalSkuIds={finalSkuIds}
           onAddManual={onAddManual}
         />
