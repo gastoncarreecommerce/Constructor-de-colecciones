@@ -4,11 +4,11 @@ Este documento junta ideas para una segunda iteración del Constructor de
 Colecciones. Nada de esto está implementado todavía; son notas de dirección,
 no un compromiso de roadmap.
 
-## 1. Publicar la colección directo en VTEX (saltear el CSV)
+## 1. Publicar la colección directo en VTEX (saltear el archivo)
 
-Hoy el flujo termina en un CSV que se importa a mano en el admin de VTEX. El
-siguiente paso natural es que la app cree/actualice la colección directo
-contra la Collection API:
+Hoy el flujo termina en un `.xlsx` que se importa a mano en el admin de
+VTEX. El siguiente paso natural es que la app cree/actualice la colección
+directo contra la Collection API:
 
 - `POST /api/catalog/pvt/collection/{collectionId}/sku` para agregar SKUs a
   una colección existente, en el orden final elegido.
@@ -16,7 +16,7 @@ contra la Collection API:
   /api/catalog/pvt/collection/` si la colección es nueva).
 - Esto implica mover esta llamada a una serverless function de `/api` (nunca
   desde el cliente, porque requiere AppKey/AppToken), y agregar un botón
-  "Publicar en VTEX" al lado de "Exportar CSV".
+  "Publicar en VTEX" al lado de "Exportar".
 - Hay que pensar el modo "reemplazar colección completa" vs "agregar/mover
   SKUs existentes", porque la Collection API no tiene un endpoint atómico de
   "reemplazar todo el orden" — probablemente haya que traer el estado actual
@@ -67,7 +67,7 @@ Para saber si vale la pena mantener una combinación de pesos en vez de otra:
 - Vista previa visual tipo "grilla de PLP" además de la tabla, para ver
   cómo quedaría la colección en el sitio antes de publicarla.
 - Undo/redo sobre el reordenamiento manual.
-- Exportar/importar el estado completo de una sesión (no solo el CSV final)
+- Exportar/importar el estado completo de una sesión (no solo el .xlsx final)
   como JSON, para retomar el armado de una colección otro día.
 - Reemplazar el JSON estático por un blob storage con versionado si el
   catálogo crece mucho y el repo se vuelve pesado de clonar.

@@ -3,8 +3,9 @@
 Herramienta interna (Carrefour Argentina) para armar colecciones de
 productos de VTEX a partir de uno o varios sellers 3P, de forma
 semi-automática, a través de un wizard de 4 pasos: elegir sellers, elegir
-criterios de scoring, revisar/reordenar (drag & drop), y exportar a CSV
-listo para importar en Colecciones de VTEX.
+criterios de scoring, revisar/reordenar (drag & drop), y exportar un
+`.xlsx` que replica el template real de import de Colecciones de VTEX
+(sheet "Collection", columna `SKUREFID` completada).
 
 ## Arquitectura
 
@@ -17,7 +18,7 @@ listo para importar en Colecciones de VTEX.
 [Frontend (Vercel)]
    → auto-deploy en cada push a main
    → lee los JSON estáticos (public/data → symlink a data/)
-   → aplica scoring/filtros en memoria, reordenamiento manual, export CSV
+   → aplica scoring/filtros en memoria, reordenamiento manual, export .xlsx
    → todo client-side, sin pegarle a VTEX en vivo
 ```
 
@@ -29,7 +30,7 @@ la v1 no lo usa: todo sale del JSON cacheado.
 
 ```
 /scripts                 Job de datos (Fase 1)
-/src/lib                 Tipos compartidos, motor de scoring (Fase 2), CSV, presets
+/src/lib                 Tipos compartidos, motor de scoring (Fase 2), export .xlsx, presets
 /src/components          Componentes reusables (grilla, reorder, export)
 /src/components/wizard   Los 4 pasos del wizard + indicador de progreso
 /api                      Serverless functions de Vercel (proxy VTEX)
@@ -102,7 +103,9 @@ Abrí `http://localhost:5173`. El frontend es un wizard de 4 pasos:
    puntuales o agregar alguno manualmente) + la lista final reordenable con
    drag & drop.
 4. **Exportar** — resumen de la colección armada y el botón de descarga del
-   CSV.
+   `.xlsx`, con la estructura exacta que espera el import de Colecciones de
+   VTEX (sheet "Collection", columnas `SKU`/`PRODUCT`/`SKUREFID`/
+   `PRODUCTREFID`, solo `SKUREFID` completada — nada más).
 
 Vas a ver el seller de ejemplo (`seller-demo`) disponible para elegir en el
 paso 1. Una vez que corriste la Fase 1 con sellers reales, van a aparecer

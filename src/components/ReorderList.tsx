@@ -102,7 +102,7 @@ export default function ReorderList({ products, onReorder, onRemove }: ReorderLi
         Orden final de la colección ({products.length})
       </h2>
       <p className="text-xs text-slate-500">
-        Arrastrá para reordenar manualmente. El orden acá abajo es el que se exporta al CSV.
+        Arrastrá para reordenar manualmente. El orden acá abajo es el que se exporta.
       </p>
 
       {products.length === 0 ? (

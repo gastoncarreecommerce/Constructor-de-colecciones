@@ -43,7 +43,7 @@ export default function Step4Export({
       <div>
         <h2 className="text-lg font-semibold text-slate-900">Colección lista</h2>
         <p className="text-sm text-slate-500">
-          Revisá el resumen y exportá el CSV para importarlo en Colecciones de VTEX.
+          Revisá el resumen y exportá el archivo para importarlo en Colecciones de VTEX.
         </p>
       </div>
 

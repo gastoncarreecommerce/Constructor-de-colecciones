@@ -1,7 +1,7 @@
 {
   "name": "constructor-de-colecciones",
   "version": "1.0.0",
-  "description": "Herramienta interna para armar colecciones de productos VTEX a partir de un seller 3P, con filtros/scoring combinables, reordenamiento manual y export a CSV.",
+  "description": "Herramienta interna para armar colecciones de productos VTEX a partir de uno o varios sellers 3P, con filtros/scoring combinables, reordenamiento manual y export al template .xlsx de Colecciones de VTEX.",
   "type": "module",
   "private": true,
   "scripts": {
@@ -18,7 +18,8 @@
     "@dnd-kit/sortable": "^8.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",
