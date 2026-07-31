@@ -40,6 +40,10 @@ export default function App() {
   const [excludedSkuIds, setExcludedSkuIds] = useState<Set<string>>(new Set());
   const [manualAdditions, setManualAdditions] = useState<SellerTaggedProduct[]>([]);
   const [finalOrder, setFinalOrder] = useState<string[]>([]);
+  // Mientras el usuario no arrastró nada a mano, finalOrder se recalcula 100%
+  // fresco en cada cambio (round-robin limpio). Una vez que arrastra algo, ahí
+  // sí empezamos a preservar su orden manual en los recálculos siguientes.
+  const [hasManuallyReordered, setHasManuallyReordered] = useState(false);
 
   // Carga el índice de sellers disponibles.
   useEffect(() => {
@@ -78,8 +82,24 @@ export default function App() {
       else failed.push(selectedSellerIds[i]);
     });
 
+    const previousSellerSet = new Set(catalogs.map((c) => c.sellerId));
+    const nextSellerSet = new Set(loaded.map((c) => c.sellerId));
+    const sellerSetChanged =
+      previousSellerSet.size !== nextSellerSet.size ||
+      [...previousSellerSet].some((id) => !nextSellerSet.has(id));
+
     setCatalogs(loaded);
     setCatalogsLoading(false);
+
+    // Si cambió qué sellers están incluidos, la composición final anterior ya
+    // no tiene sentido (podía estar copada por un seller que ya no es el
+    // único, o le faltaban los nuevos) — arrancamos de cero.
+    if (sellerSetChanged) {
+      setExcludedSkuIds(new Set());
+      setManualAdditions([]);
+      setFinalOrder([]);
+      setHasManuallyReordered(false);
+    }
 
     if (failed.length > 0) {
       setCatalogsError(`No se pudo cargar el catálogo de: ${failed.join(", ")}`);
@@ -154,10 +174,17 @@ export default function App() {
     return [...autoSelectedSkuIds, ...manualIds];
   }, [autoSelectedSkuIds, manualAdditions, excludedSkuIds]);
 
-  // Reconcilia finalOrder con baseFinalSkuIds preservando el orden ya arrastrado
-  // por el usuario para los productos que se mantienen, y agregando los nuevos al final.
+  // Si el usuario todavía no arrastró nada a mano, finalOrder sigue 100% al
+  // resultado fresco del algoritmo (round-robin incluido) en cada cambio.
+  // Recién una vez que arrastra algo empezamos a preservar su orden manual
+  // para los productos que se mantienen, agregando los nuevos al final.
   useEffect(() => {
     setFinalOrder((prev) => {
+      if (!hasManuallyReordered) {
+        const sameLength = baseFinalSkuIds.length === prev.length;
+        const sameOrder = sameLength && baseFinalSkuIds.every((id, i) => id === prev[i]);
+        return sameOrder ? prev : baseFinalSkuIds;
+      }
       const baseSet = new Set(baseFinalSkuIds);
       const kept = prev.filter((id) => baseSet.has(id));
       const keptSet = new Set(kept);
@@ -168,7 +195,7 @@ export default function App() {
       return sameOrder ? prev : next;
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [baseFinalSkuIds.join("|")]);
+  }, [baseFinalSkuIds.join("|"), hasManuallyReordered]);
 
   const finalProducts = useMemo(
     () =>
@@ -177,6 +204,11 @@ export default function App() {
         .filter((p): p is SellerTaggedProduct => Boolean(p)),
     [finalOrder, productsBySkuId],
   );
+
+  function handleReorder(newOrder: string[]) {
+    setHasManuallyReordered(true);
+    setFinalOrder(newOrder);
+  }
 
   function handleToggleExclude(skuId: string) {
     setExcludedSkuIds((prev) => {
@@ -220,6 +252,7 @@ export default function App() {
     setExcludedSkuIds(new Set());
     setManualAdditions([]);
     setFinalOrder([]);
+    setHasManuallyReordered(false);
   }
 
   const sellerNames = catalogs.map((c) => c.sellerName);
@@ -284,7 +317,7 @@ export default function App() {
             finalSkuIds={new Set(finalOrder)}
             onAddManual={handleAddManual}
             finalProducts={finalProducts}
-            onReorder={setFinalOrder}
+            onReorder={handleReorder}
             onRemove={handleRemoveFromFinal}
             onBack={() => setStep(2)}
             onNext={() => setStep(4)}
