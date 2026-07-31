@@ -121,6 +121,12 @@ export default function App() {
     [catalogs],
   );
 
+  const availableCategories = useMemo(() => {
+    const set = new Set<string>();
+    mergedProducts.forEach((p) => p.categoryPath && set.add(p.categoryPath));
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [mergedProducts]);
+
   const scored = useMemo(
     () => scoreProducts(mergedProducts, { weights, noInterestThreshold, stockMode }, hardFilters),
     [mergedProducts, weights, noInterestThreshold, stockMode, hardFilters],
@@ -302,6 +308,7 @@ export default function App() {
             interleaveBySeller={interleaveBySeller}
             onInterleaveBySellerChange={setInterleaveBySeller}
             sellerCount={catalogs.length}
+            availableCategories={availableCategories}
             onBack={() => setStep(1)}
             onNext={() => setStep(3)}
           />

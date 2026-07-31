@@ -69,6 +69,8 @@ export interface HardFilters {
   maxCategoryShare: number | null;
   /** Cuotas sin interés mínimas para que el producto sobreviva al filtro (0 = sin filtro). */
   minInstallmentsNoInterest: number;
+  /** Lista de categoryPath permitidas. null o [] = sin filtro (todas las categorías). */
+  categoryPaths: string[] | null;
 }
 
 export interface ScoredProduct extends Product {

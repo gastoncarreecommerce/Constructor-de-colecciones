@@ -28,6 +28,7 @@ const noHardFilters: HardFilters = {
   excludeOutOfStock: false,
   maxCategoryShare: null,
   minInstallmentsNoInterest: 0,
+  categoryPaths: null,
 };
 
 function onlyWeight(weight: keyof ScoringWeights, value = 100): ScoringOptions {
@@ -226,6 +227,28 @@ describe("scoreProducts", () => {
       const filters: HardFilters = { ...noHardFilters, maxCategoryShare: null };
       const result = scoreProducts(products, DEFAULT_SCORING_OPTIONS, filters);
       expect(result).toHaveLength(3);
+    });
+
+    it("categoryPaths deja pasar solo las categorías incluidas en la lista", () => {
+      const products = [
+        makeProduct({ skuId: "a1", categoryPath: "Electro/Heladeras" }),
+        makeProduct({ skuId: "a2", categoryPath: "Electro/Lavarropas" }),
+        makeProduct({ skuId: "b1", categoryPath: "Hogar/Muebles" }),
+      ];
+      const filters: HardFilters = { ...noHardFilters, categoryPaths: ["Electro/Heladeras"] };
+      const result = scoreProducts(products, DEFAULT_SCORING_OPTIONS, filters);
+      expect(result.map((p) => p.skuId)).toEqual(["a1"]);
+    });
+
+    it("categoryPaths vacío o null no aplica ningún filtro", () => {
+      const products = [
+        makeProduct({ skuId: "a1", categoryPath: "Electro/Heladeras" }),
+        makeProduct({ skuId: "b1", categoryPath: "Hogar/Muebles" }),
+      ];
+      const filtersEmpty: HardFilters = { ...noHardFilters, categoryPaths: [] };
+      const filtersNull: HardFilters = { ...noHardFilters, categoryPaths: null };
+      expect(scoreProducts(products, DEFAULT_SCORING_OPTIONS, filtersEmpty)).toHaveLength(2);
+      expect(scoreProducts(products, DEFAULT_SCORING_OPTIONS, filtersNull)).toHaveLength(2);
     });
   });
 });

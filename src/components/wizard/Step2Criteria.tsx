@@ -18,6 +18,7 @@ interface Step2CriteriaProps {
   interleaveBySeller: boolean;
   onInterleaveBySellerChange: (value: boolean) => void;
   sellerCount: number;
+  availableCategories: string[];
   onBack: () => void;
   onNext: () => void;
 }
@@ -95,12 +96,26 @@ export default function Step2Criteria({
   interleaveBySeller,
   onInterleaveBySellerChange,
   sellerCount,
+  availableCategories,
   onBack,
   onNext,
 }: Step2CriteriaProps) {
   const [presets, setPresets] = useState<WeightPreset[]>([]);
   const [presetName, setPresetName] = useState("");
   const [selectedPreset, setSelectedPreset] = useState("");
+  const [categorySearch, setCategorySearch] = useState("");
+
+  const selectedCategories = hardFilters.categoryPaths ?? [];
+  const filteredCategories = categorySearch.trim()
+    ? availableCategories.filter((c) => c.toLowerCase().includes(categorySearch.trim().toLowerCase()))
+    : availableCategories;
+
+  function toggleCategory(category: string) {
+    const next = selectedCategories.includes(category)
+      ? selectedCategories.filter((c) => c !== category)
+      : [...selectedCategories, category];
+    onHardFiltersChange({ ...hardFilters, categoryPaths: next.length > 0 ? next : null });
+  }
 
   useEffect(() => {
     setPresets(listPresets());
@@ -316,6 +331,71 @@ export default function Step2Criteria({
           )}
         </div>
       </div>
+
+      <details className="rounded-lg border border-slate-200 bg-white p-4" open={selectedCategories.length > 0}>
+        <summary className="cursor-pointer text-sm font-semibold text-slate-800">
+          Categorías{" "}
+          {selectedCategories.length > 0 && (
+            <span className="ml-1 rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
+              {selectedCategories.length} elegida{selectedCategories.length === 1 ? "" : "s"}
+            </span>
+          )}
+        </summary>
+        <div className="mt-4 flex flex-col gap-3">
+          <p className="text-xs text-slate-500">
+            Sin nada elegido acá entran todas las categorías. Útil para armar una colección de un
+            seller pero solo de una categoría puntual (ej: "Electrolux, pero solo Heladeras").
+          </p>
+          {availableCategories.length === 0 ? (
+            <p className="text-sm text-slate-400">
+              Todavía no hay categorías disponibles (elegí sellers primero).
+            </p>
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Buscar categoría..."
+                  value={categorySearch}
+                  onChange={(e) => setCategorySearch(e.target.value)}
+                  className="min-w-[14rem] flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => onHardFiltersChange({ ...hardFilters, categoryPaths: null })}
+                  disabled={selectedCategories.length === 0}
+                  className="rounded-md border border-slate-300 px-2 py-1.5 text-sm text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+                >
+                  Limpiar selección
+                </button>
+              </div>
+              <div className="max-h-56 overflow-y-auto rounded-md border border-slate-100">
+                {filteredCategories.length === 0 ? (
+                  <p className="p-3 text-center text-sm text-slate-400">
+                    Sin resultados para "{categorySearch}".
+                  </p>
+                ) : (
+                  <ul className="divide-y divide-slate-100">
+                    {filteredCategories.map((category) => (
+                      <li key={category}>
+                        <label className="flex cursor-pointer items-center gap-2 px-3 py-1.5 text-sm hover:bg-slate-50">
+                          <input
+                            type="checkbox"
+                            checked={selectedCategories.includes(category)}
+                            onChange={() => toggleCategory(category)}
+                            className="h-4 w-4 shrink-0 accent-indigo-600"
+                          />
+                          <span className="truncate text-slate-700">{category}</span>
+                        </label>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      </details>
 
       <details className="rounded-lg border border-slate-200 bg-white p-4">
         <summary className="cursor-pointer text-sm font-semibold text-slate-800">Filtros avanzados</summary>

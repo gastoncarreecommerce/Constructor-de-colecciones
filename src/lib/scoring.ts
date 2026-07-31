@@ -23,6 +23,7 @@ export const DEFAULT_HARD_FILTERS: HardFilters = {
   excludeOutOfStock: true,
   maxCategoryShare: null,
   minInstallmentsNoInterest: 0,
+  categoryPaths: null,
 };
 
 /** Normaliza un array de números a escala 0-1 (min-max). */
@@ -42,6 +43,13 @@ function applyHardFilters<T extends Product>(products: T[], filters: HardFilters
     if (
       filters.minInstallmentsNoInterest > 0 &&
       p.maxInstallmentsNoInterest < filters.minInstallmentsNoInterest
+    ) {
+      return false;
+    }
+    if (
+      filters.categoryPaths &&
+      filters.categoryPaths.length > 0 &&
+      !filters.categoryPaths.includes(p.categoryPath)
     ) {
       return false;
     }
