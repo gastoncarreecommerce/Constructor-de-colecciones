@@ -2,10 +2,20 @@
 
 Herramienta interna (Carrefour Argentina) para armar colecciones de
 productos de VTEX a partir de uno o varios sellers 3P, de forma
-semi-automática, a través de un wizard de 4 pasos: elegir sellers, elegir
-criterios de scoring, revisar/reordenar (drag & drop), y exportar un
-`.xlsx` que replica el template real de import de Colecciones de VTEX
-(sheet "Collection", columna `SKUREFID` completada).
+semi-automática. Dos modos de arranque:
+
+- **Desde cero**: elegir sellers → elegir criterios de scoring (con
+  filtro opcional por categoría) → revisar/reordenar (drag & drop) →
+  exportar.
+- **Reordenar una colección existente**: subir un `.xlsx` con SKUs →
+  elegir criterio de orden → revisar/reordenar → exportar. Los SKUs se
+  buscan automáticamente contra todos los catálogos cacheados; los que no
+  se encuentran quedan listados aparte y van al final del export, sin
+  orden aplicado.
+
+En ambos casos el export es un `.xlsx` que replica el template real de
+import de Colecciones de VTEX (sheet "Collection", columna `SKUREFID`
+completada).
 
 ## Arquitectura
 
@@ -89,28 +99,37 @@ pesos, filtros duros, cap por categoría).
 npm run dev
 ```
 
-Abrí `http://localhost:5173`. El frontend es un wizard de 4 pasos:
+Abrí `http://localhost:5173`. Primero elegís el modo (desde cero vs.
+reordenar una colección existente); a partir de ahí el frontend es un
+wizard de 4 pasos:
 
-1. **Sellers** — elegí uno o varios sellers 3P (multi-select con buscador).
-   Sus catálogos se combinan en una sola colección.
+1. **Sellers** (modo desde cero) — elegí uno o varios sellers 3P
+   (multi-select con buscador); sus catálogos se combinan en una sola
+   colección. **Archivo** (modo reordenar) — subís un `.xlsx` con una
+   columna `SKUREFID`; la app busca cada SKU contra todos los catálogos
+   cacheados.
 2. **Criterios** — activá qué priorizar (más vendidos/populares, recién
    catalogados, mejor financiación, mejor descuento, stock, calidad de
    contenido) con un nivel de importancia por criterio. "Mejor calificación"
    aparece deshabilitada: requiere integrar la API de Reviews & Ratings de
-   VTEX, no está en el alcance actual. Filtros avanzados (stock mínimo, cap
-   por categoría, cantidad final) y presets quedan colapsados abajo.
+   VTEX, no está en el alcance actual. Un filtro opcional por categoría
+   (útil para "este seller, pero solo esta categoría"), filtros avanzados
+   (stock mínimo, cap por categoría, cantidad final, intercalado por seller)
+   y presets quedan colapsados abajo.
 3. **Revisión** — grilla con el ranking automático (podés excluir productos
    puntuales o agregar alguno manualmente) + la lista final reordenable con
    drag & drop.
 4. **Exportar** — resumen de la colección armada y el botón de descarga del
    `.xlsx`, con la estructura exacta que espera el import de Colecciones de
    VTEX (sheet "Collection", columnas `SKU`/`PRODUCT`/`SKUREFID`/
-   `PRODUCTREFID`, solo `SKUREFID` completada — nada más).
+   `PRODUCTREFID`, solo `SKUREFID` completada — nada más). En modo
+   reordenar, los SKUs que no se encontraron en ningún catálogo se listan
+   aparte y van al final del archivo, sin orden aplicado.
 
 Vas a ver el seller de ejemplo (`seller-demo`) disponible para elegir en el
-paso 1. Una vez que corriste la Fase 1 con sellers reales, van a aparecer
-ahí también (el índice se lee de `data/sellers/index.json`, servido vía el
-symlink `public/data → ../data`).
+paso de sellers. Una vez que corriste la Fase 1 con sellers reales, van a
+aparecer ahí también (el índice se lee de `data/sellers/index.json`,
+servido vía el symlink `public/data → ../data`).
 
 Otros comandos útiles:
 

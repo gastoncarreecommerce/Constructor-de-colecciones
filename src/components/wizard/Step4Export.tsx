@@ -6,6 +6,8 @@ interface Step4ExportProps {
   sellerNames: string[];
   weights: ScoringWeights;
   fileLabel: string;
+  /** SKUs subidos que no se encontraron en ningún catálogo (modo reordenar existente). */
+  unmatchedSkuRefIds?: string[];
   onBack: () => void;
   onRestart: () => void;
 }
@@ -31,6 +33,7 @@ export default function Step4Export({
   sellerNames,
   weights,
   fileLabel,
+  unmatchedSkuRefIds = [],
   onBack,
   onRestart,
 }: Step4ExportProps) {
@@ -79,11 +82,29 @@ export default function Step4Export({
           <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
             Productos en la colección final
           </span>
-          <p className="text-2xl font-semibold text-slate-900">{finalProducts.length}</p>
+          <p className="text-2xl font-semibold text-slate-900">
+            {finalProducts.length + unmatchedSkuRefIds.length}
+          </p>
         </div>
       </div>
 
-      <ExportButton products={finalProducts} fileLabel={fileLabel} />
+      {unmatchedSkuRefIds.length > 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+          <p className="text-sm font-medium text-amber-800">
+            {unmatchedSkuRefIds.length} SKU{unmatchedSkuRefIds.length === 1 ? "" : "s"} del archivo no se
+            encontr{unmatchedSkuRefIds.length === 1 ? "ó" : "aron"} en ningún catálogo cacheado.
+          </p>
+          <p className="mt-1 text-xs text-amber-700">
+            Van al final del archivo exportado tal cual, sin ningún criterio de orden aplicado (no
+            tenemos datos para puntuarlos).
+          </p>
+          <p className="mt-2 break-all font-mono text-xs text-amber-700">
+            {unmatchedSkuRefIds.join(", ")}
+          </p>
+        </div>
+      )}
+
+      <ExportButton products={finalProducts} fileLabel={fileLabel} extraSkuRefIds={unmatchedSkuRefIds} />
 
       <div className="flex items-center justify-between border-t border-slate-200 pt-4">
         <button

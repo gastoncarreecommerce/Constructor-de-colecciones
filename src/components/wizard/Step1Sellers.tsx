@@ -12,6 +12,7 @@ interface Step1SellersProps {
   onNext: () => void;
   nextLoading: boolean;
   nextError: string | null;
+  onBack?: () => void;
 }
 
 export default function Step1Sellers({
@@ -25,6 +26,7 @@ export default function Step1Sellers({
   onNext,
   nextLoading,
   nextError,
+  onBack,
 }: Step1SellersProps) {
   const [search, setSearch] = useState("");
   const selectedSet = useMemo(() => new Set(selectedSellerIds), [selectedSellerIds]);
@@ -39,6 +41,15 @@ export default function Step1Sellers({
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-5">
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="self-start text-sm text-slate-500 hover:text-slate-700"
+        >
+          ← Volver
+        </button>
+      )}
       <div>
         <h2 className="text-lg font-semibold text-slate-900">¿Con qué sellers armamos la colección?</h2>
         <p className="text-sm text-slate-500">

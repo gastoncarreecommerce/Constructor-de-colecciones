@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import StepIndicator from "./components/wizard/StepIndicator";
+import Step0Mode from "./components/wizard/Step0Mode";
+import Step0Upload from "./components/wizard/Step0Upload";
 import Step1Sellers from "./components/wizard/Step1Sellers";
 import Step2Criteria from "./components/wizard/Step2Criteria";
 import Step3Review from "./components/wizard/Step3Review";
@@ -16,18 +18,27 @@ import type {
 
 const DEFAULT_TOP_N = 40;
 
+type Mode = "fresh" | "reorder" | null;
+
 export default function App() {
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [mode, setMode] = useState<Mode>(null);
+  const [step, setStep] = useState<0 | 1 | 2 | 3 | 4>(0);
 
   const [sellers, setSellers] = useState<SellerIndex>([]);
   const [sellersLoading, setSellersLoading] = useState(true);
   const [sellersError, setSellersError] = useState<string | null>(null);
 
+  // Modo "desde cero"
   const [selectedSellerIds, setSelectedSellerIds] = useState<string[]>([]);
-
   const [catalogs, setCatalogs] = useState<SellerCatalog[]>([]);
   const [catalogsLoading, setCatalogsLoading] = useState(false);
   const [catalogsError, setCatalogsError] = useState<string | null>(null);
+
+  // Modo "reordenar colección existente"
+  const [reorderMatchedProducts, setReorderMatchedProducts] = useState<SellerTaggedProduct[]>([]);
+  const [unmatchedRefIds, setUnmatchedRefIds] = useState<string[]>([]);
+  const [matchingLoading, setMatchingLoading] = useState(false);
+  const [matchingError, setMatchingError] = useState<string | null>(null);
 
   const [weights, setWeights] = useState<ScoringWeights>(DEFAULT_SCORING_WEIGHTS);
   const [noInterestThreshold, setNoInterestThreshold] = useState(6);
@@ -41,7 +52,7 @@ export default function App() {
   const [manualAdditions, setManualAdditions] = useState<SellerTaggedProduct[]>([]);
   const [finalOrder, setFinalOrder] = useState<string[]>([]);
   // Mientras el usuario no arrastró nada a mano, finalOrder se recalcula 100%
-  // fresco en cada cambio (round-robin limpio). Una vez que arrastra algo, ahí
+  // fresco en cada cambio (round-robin incluido). Una vez que arrastra algo, ahí
   // sí empezamos a preservar su orden manual en los recálculos siguientes.
   const [hasManuallyReordered, setHasManuallyReordered] = useState(false);
 
@@ -56,6 +67,28 @@ export default function App() {
       .catch((err) => setSellersError(`No se pudo cargar la lista de sellers: ${err.message}`))
       .finally(() => setSellersLoading(false));
   }, []);
+
+  function resetComposition() {
+    setExcludedSkuIds(new Set());
+    setManualAdditions([]);
+    setFinalOrder([]);
+    setHasManuallyReordered(false);
+  }
+
+  function handleChooseFresh() {
+    setMode("fresh");
+    setStep(1);
+  }
+
+  function handleChooseReorder() {
+    setMode("reorder");
+    setStep(1);
+  }
+
+  function handleBackToModeSelect() {
+    setMode(null);
+    setStep(0);
+  }
 
   function toggleSeller(sellerId: string) {
     setSelectedSellerIds((prev) =>
@@ -95,10 +128,7 @@ export default function App() {
     // no tiene sentido (podía estar copada por un seller que ya no es el
     // único, o le faltaban los nuevos) — arrancamos de cero.
     if (sellerSetChanged) {
-      setExcludedSkuIds(new Set());
-      setManualAdditions([]);
-      setFinalOrder([]);
-      setHasManuallyReordered(false);
+      resetComposition();
     }
 
     if (failed.length > 0) {
@@ -109,23 +139,83 @@ export default function App() {
     }
   }
 
-  const mergedProducts = useMemo<SellerTaggedProduct[]>(
-    () =>
-      catalogs.flatMap((catalog) =>
-        catalog.products.map((product) => ({
-          ...product,
-          sellerId: catalog.sellerId,
-          sellerName: catalog.sellerName,
-        })),
-      ),
-    [catalogs],
-  );
+  /**
+   * Busca cada SKU subido contra TODOS los catálogos de sellers cacheados
+   * (no le pedimos al usuario que elija sellers: puede no saber de qué
+   * seller es cada SKU). Arma un lookup por ean/RefId una sola vez.
+   */
+  async function handleSkusExtracted(refIds: string[]) {
+    if (sellers.length === 0) {
+      setMatchingError("Todavía no cargó la lista de sellers. Esperá un momento y probá de nuevo.");
+      return;
+    }
+
+    setMatchingLoading(true);
+    setMatchingError(null);
+
+    const results = await Promise.allSettled(
+      sellers.map(async (s) => {
+        const res = await fetch(`/data/sellers/${s.sellerId}.json`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return (await res.json()) as SellerCatalog;
+      }),
+    );
+
+    const lookup = new Map<string, SellerTaggedProduct>();
+    for (const result of results) {
+      if (result.status !== "fulfilled") continue;
+      const catalog = result.value;
+      for (const product of catalog.products) {
+        if (!lookup.has(product.ean)) {
+          lookup.set(product.ean, {
+            ...product,
+            sellerId: catalog.sellerId,
+            sellerName: catalog.sellerName,
+          });
+        }
+      }
+    }
+
+    const matched: SellerTaggedProduct[] = [];
+    const unmatched: string[] = [];
+    for (const refId of refIds) {
+      const found = lookup.get(refId);
+      if (found) matched.push(found);
+      else unmatched.push(refId);
+    }
+
+    setReorderMatchedProducts(matched);
+    setUnmatchedRefIds(unmatched);
+    resetComposition();
+    // Es una lista fija que el usuario ya armó: no queremos cortarla ni
+    // repartirla por seller por defecto, solo reordenarla.
+    setNoTopLimit(true);
+    setInterleaveBySeller(false);
+    setMatchingLoading(false);
+    setStep(2);
+  }
+
+  const mergedProducts = useMemo<SellerTaggedProduct[]>(() => {
+    if (mode === "reorder") return reorderMatchedProducts;
+    return catalogs.flatMap((catalog) =>
+      catalog.products.map((product) => ({
+        ...product,
+        sellerId: catalog.sellerId,
+        sellerName: catalog.sellerName,
+      })),
+    );
+  }, [mode, reorderMatchedProducts, catalogs]);
 
   const availableCategories = useMemo(() => {
     const set = new Set<string>();
     mergedProducts.forEach((p) => p.categoryPath && set.add(p.categoryPath));
     return [...set].sort((a, b) => a.localeCompare(b));
   }, [mergedProducts]);
+
+  const distinctSellerCount = useMemo(
+    () => new Set(mergedProducts.map((p) => p.sellerId)).size,
+    [mergedProducts],
+  );
 
   const scored = useMemo(
     () => scoreProducts(mergedProducts, { weights, noInterestThreshold, stockMode }, hardFilters),
@@ -244,10 +334,14 @@ export default function App() {
   }
 
   function handleRestart() {
-    setStep(1);
+    setMode(null);
+    setStep(0);
     setSelectedSellerIds([]);
     setCatalogs([]);
     setCatalogsError(null);
+    setReorderMatchedProducts([]);
+    setUnmatchedRefIds([]);
+    setMatchingError(null);
     setWeights(DEFAULT_SCORING_WEIGHTS);
     setNoInterestThreshold(6);
     setStockMode("prefer-high-stock");
@@ -255,15 +349,21 @@ export default function App() {
     setTopN(DEFAULT_TOP_N);
     setNoTopLimit(false);
     setInterleaveBySeller(true);
-    setExcludedSkuIds(new Set());
-    setManualAdditions([]);
-    setFinalOrder([]);
-    setHasManuallyReordered(false);
+    resetComposition();
   }
 
-  const sellerNames = catalogs.map((c) => c.sellerName);
+  const sellerNames = [...new Set(mergedProducts.map((p) => p.sellerName))];
   const fileLabel =
-    selectedSellerIds.length === 1 ? selectedSellerIds[0] : `multiseller-${selectedSellerIds.length}`;
+    mode === "reorder"
+      ? "reordenada"
+      : selectedSellerIds.length === 1
+        ? selectedSellerIds[0]
+        : `multiseller-${selectedSellerIds.length}`;
+
+  const stepLabels =
+    mode === "reorder"
+      ? ["Archivo", "Criterios", "Revisión", "Exportar"]
+      : ["Sellers", "Criterios", "Revisión", "Exportar"];
 
   return (
     <div className="min-h-screen bg-slate-100">
@@ -272,11 +372,17 @@ export default function App() {
         <p className="mb-4 text-sm text-slate-500">
           Carrefour Argentina · armado semi-automático de colecciones por seller 3P
         </p>
-        <StepIndicator current={step} onJump={(s) => setStep(s as 1 | 2 | 3 | 4)} />
+        {step > 0 && (
+          <StepIndicator labels={stepLabels} current={step} onJump={(s) => setStep(s as 1 | 2 | 3 | 4)} />
+        )}
       </header>
 
       <main className="mx-auto max-w-7xl p-4">
-        {step === 1 && (
+        {step === 0 && (
+          <Step0Mode onChooseFresh={handleChooseFresh} onChooseReorder={handleChooseReorder} />
+        )}
+
+        {step === 1 && mode === "fresh" && (
           <Step1Sellers
             sellers={sellers}
             loading={sellersLoading}
@@ -288,6 +394,16 @@ export default function App() {
             onNext={handleNextFromStep1}
             nextLoading={catalogsLoading}
             nextError={catalogsError}
+            onBack={handleBackToModeSelect}
+          />
+        )}
+
+        {step === 1 && mode === "reorder" && (
+          <Step0Upload
+            onSkusExtracted={handleSkusExtracted}
+            matchingLoading={matchingLoading}
+            matchingError={matchingError}
+            onBack={handleBackToModeSelect}
           />
         )}
 
@@ -307,7 +423,7 @@ export default function App() {
             onNoTopLimitChange={setNoTopLimit}
             interleaveBySeller={interleaveBySeller}
             onInterleaveBySellerChange={setInterleaveBySeller}
-            sellerCount={catalogs.length}
+            sellerCount={distinctSellerCount}
             availableCategories={availableCategories}
             onBack={() => setStep(1)}
             onNext={() => setStep(3)}
@@ -337,6 +453,7 @@ export default function App() {
             sellerNames={sellerNames}
             weights={weights}
             fileLabel={fileLabel}
+            unmatchedSkuRefIds={mode === "reorder" ? unmatchedRefIds : []}
             onBack={() => setStep(3)}
             onRestart={handleRestart}
           />

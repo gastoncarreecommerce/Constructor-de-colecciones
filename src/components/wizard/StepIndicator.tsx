@@ -1,14 +1,13 @@
-const STEPS = ["Sellers", "Criterios", "Revisión", "Exportar"] as const;
-
 interface StepIndicatorProps {
+  labels: string[];
   current: number;
   onJump: (step: number) => void;
 }
 
-export default function StepIndicator({ current, onJump }: StepIndicatorProps) {
+export default function StepIndicator({ labels, current, onJump }: StepIndicatorProps) {
   return (
     <ol className="flex flex-wrap items-center gap-x-1 gap-y-2 text-sm">
-      {STEPS.map((label, i) => {
+      {labels.map((label, i) => {
         const stepNum = i + 1;
         const isCurrent = stepNum === current;
         const isDone = stepNum < current;
@@ -41,7 +40,7 @@ export default function StepIndicator({ current, onJump }: StepIndicatorProps) {
               </span>
               {label}
             </button>
-            {stepNum < STEPS.length && <span className="px-1 text-slate-300">→</span>}
+            {stepNum < labels.length && <span className="px-1 text-slate-300">→</span>}
           </li>
         );
       })}
