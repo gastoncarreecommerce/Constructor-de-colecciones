@@ -15,16 +15,16 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Product } from "../lib/types";
+import type { SellerTaggedProduct } from "../lib/types";
 
 interface ReorderListProps {
-  products: Product[];
+  products: SellerTaggedProduct[];
   onReorder: (newOrder: string[]) => void;
   onRemove: (skuId: string) => void;
 }
 
 interface RowProps {
-  product: Product;
+  product: SellerTaggedProduct;
   position: number;
   onRemove: (skuId: string) => void;
 }
@@ -64,7 +64,7 @@ function SortableRow({ product, position, onRemove }: RowProps) {
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm text-slate-800">{product.productName}</p>
         <p className="truncate text-xs text-slate-400">
-          EAN {product.ean} · SKU {product.skuId}
+          {product.sellerName} · EAN {product.ean} · SKU {product.skuId}
         </p>
       </div>
       <button

@@ -1,10 +1,4 @@
-import type {
-  HardFilters,
-  Product,
-  ScoredProduct,
-  ScoringOptions,
-  ScoringWeights,
-} from "./types";
+import type { HardFilters, Product, ScoringOptions, ScoringWeights } from "./types";
 
 /** Valor neutro cuando no hay variación en el universo (evita división por cero). */
 const NEUTRAL_SCORE = 0.5;
@@ -61,13 +55,13 @@ function applyHardFilters<T extends Product>(products: T[], filters: HardFilters
  * punto. El primer producto de cada categoría siempre entra, para no dejar
  * categorías enteras afuera cuando el cap es muy restrictivo.
  */
-function applyCategoryShareCap(
-  sorted: ScoredProduct[],
+function applyCategoryShareCap<T extends Product>(
+  sorted: (T & { score: number })[],
   maxCategoryShare: number | null,
-): ScoredProduct[] {
+): (T & { score: number })[] {
   if (maxCategoryShare === null || maxCategoryShare >= 1) return sorted;
 
-  const result: ScoredProduct[] = [];
+  const result: (T & { score: number })[] = [];
   const categoryCounts = new Map<string, number>();
 
   for (const product of sorted) {
@@ -92,12 +86,16 @@ function applyCategoryShareCap(
  * La normalización min-max de cada variable se calcula sobre TODO el
  * universo recibido (antes de aplicar filtros duros), para que el score
  * sea comparable sin importar qué sobrevive después.
+ *
+ * Genérica sobre T (por defecto Product) para que campos extra del
+ * producto (ej. sellerId/sellerName en SellerTaggedProduct, usados por el
+ * wizard multi-seller) se preserven en el resultado sin perder tipado.
  */
-export function scoreProducts(
-  products: Product[],
+export function scoreProducts<T extends Product = Product>(
+  products: T[],
   options: ScoringOptions = DEFAULT_SCORING_OPTIONS,
   hardFilters: HardFilters = DEFAULT_HARD_FILTERS,
-): ScoredProduct[] {
+): (T & { score: number })[] {
   if (products.length === 0) return [];
 
   const { weights, noInterestThreshold, stockMode } = options;
@@ -114,7 +112,7 @@ export function scoreProducts(
   const discountNorm = minMaxNormalize(products.map((p) => p.discountPct));
   const stockNorm = minMaxNormalize(products.map((p) => p.stock));
 
-  const scoredAll: ScoredProduct[] = products.map((product, i) => {
+  const scoredAll: (T & { score: number })[] = products.map((product, i) => {
     const salesValue = 1 - salesRankNorm[i]; // rank 1 (mejor vendido) = score alto
     const recencyValue = 1 - recencyNorm[i]; // menos días desde alta = score alto
     const discountValue = discountNorm[i];

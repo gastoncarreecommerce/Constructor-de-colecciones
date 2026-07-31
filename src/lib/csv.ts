@@ -17,11 +17,11 @@ export function buildCollectionCsv(products: Product[]): string {
   return [header.join(","), ...rows].join("\n") + "\n";
 }
 
-export function collectionCsvFileName(sellerId: string, date: Date = new Date()): string {
+export function collectionCsvFileName(label: string, date: Date = new Date()): string {
   const yyyy = date.getFullYear();
   const mm = String(date.getMonth() + 1).padStart(2, "0");
   const dd = String(date.getDate()).padStart(2, "0");
-  return `coleccion_${sellerId}_${yyyy}-${mm}-${dd}.csv`;
+  return `coleccion_${label}_${yyyy}-${mm}-${dd}.csv`;
 }
 
 /** Dispara la descarga de un CSV en el navegador (100% client-side, sin backend). */

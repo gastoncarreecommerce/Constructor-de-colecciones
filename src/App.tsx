@@ -1,30 +1,33 @@
 import { useEffect, useMemo, useState } from "react";
-import ExportButton from "./components/ExportButton";
-import FilterPanel from "./components/FilterPanel";
-import ProductGrid from "./components/ProductGrid";
-import ReorderList from "./components/ReorderList";
-import SellerSelector from "./components/SellerSelector";
+import StepIndicator from "./components/wizard/StepIndicator";
+import Step1Sellers from "./components/wizard/Step1Sellers";
+import Step2Criteria from "./components/wizard/Step2Criteria";
+import Step3Review from "./components/wizard/Step3Review";
+import Step4Export from "./components/wizard/Step4Export";
 import { DEFAULT_HARD_FILTERS, DEFAULT_SCORING_WEIGHTS, scoreProducts } from "./lib/scoring";
 import type {
   HardFilters,
-  Product,
   ScoringWeights,
   SellerCatalog,
   SellerIndex,
+  SellerTaggedProduct,
   StockMode,
 } from "./lib/types";
 
 const DEFAULT_TOP_N = 40;
 
 export default function App() {
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+
   const [sellers, setSellers] = useState<SellerIndex>([]);
   const [sellersLoading, setSellersLoading] = useState(true);
   const [sellersError, setSellersError] = useState<string | null>(null);
 
-  const [selectedSellerId, setSelectedSellerId] = useState<string | null>(null);
-  const [catalog, setCatalog] = useState<SellerCatalog | null>(null);
-  const [catalogLoading, setCatalogLoading] = useState(false);
-  const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [selectedSellerIds, setSelectedSellerIds] = useState<string[]>([]);
+
+  const [catalogs, setCatalogs] = useState<SellerCatalog[]>([]);
+  const [catalogsLoading, setCatalogsLoading] = useState(false);
+  const [catalogsError, setCatalogsError] = useState<string | null>(null);
 
   const [weights, setWeights] = useState<ScoringWeights>(DEFAULT_SCORING_WEIGHTS);
   const [noInterestThreshold, setNoInterestThreshold] = useState(6);
@@ -33,7 +36,7 @@ export default function App() {
   const [topN, setTopN] = useState(DEFAULT_TOP_N);
 
   const [excludedSkuIds, setExcludedSkuIds] = useState<Set<string>>(new Set());
-  const [manualAdditions, setManualAdditions] = useState<Product[]>([]);
+  const [manualAdditions, setManualAdditions] = useState<SellerTaggedProduct[]>([]);
   const [finalOrder, setFinalOrder] = useState<string[]>([]);
 
   // Carga el índice de sellers disponibles.
@@ -43,44 +46,70 @@ export default function App() {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
       })
-      .then((data: SellerIndex) => {
-        setSellers(data);
-        if (data.length > 0) setSelectedSellerId(data[0].sellerId);
-      })
+      .then((data: SellerIndex) => setSellers(data))
       .catch((err) => setSellersError(`No se pudo cargar la lista de sellers: ${err.message}`))
       .finally(() => setSellersLoading(false));
   }, []);
 
-  // Carga el catálogo del seller elegido.
-  useEffect(() => {
-    if (!selectedSellerId) return;
-    setCatalogLoading(true);
-    setCatalogError(null);
-    setExcludedSkuIds(new Set());
-    setManualAdditions([]);
-    setFinalOrder([]);
+  function toggleSeller(sellerId: string) {
+    setSelectedSellerIds((prev) =>
+      prev.includes(sellerId) ? prev.filter((id) => id !== sellerId) : [...prev, sellerId],
+    );
+  }
 
-    fetch(`/data/sellers/${selectedSellerId}.json`)
-      .then((res) => {
+  async function handleNextFromStep1() {
+    setCatalogsLoading(true);
+    setCatalogsError(null);
+
+    const results = await Promise.allSettled(
+      selectedSellerIds.map(async (sellerId) => {
+        const res = await fetch(`/data/sellers/${sellerId}.json`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((data: SellerCatalog) => setCatalog(data))
-      .catch((err) => setCatalogError(`No se pudo cargar el catálogo: ${err.message}`))
-      .finally(() => setCatalogLoading(false));
-  }, [selectedSellerId]);
+        return (await res.json()) as SellerCatalog;
+      }),
+    );
 
-  const scored = useMemo(() => {
-    if (!catalog) return [];
-    return scoreProducts(catalog.products, { weights, noInterestThreshold, stockMode }, hardFilters);
-  }, [catalog, weights, noInterestThreshold, stockMode, hardFilters]);
+    const loaded: SellerCatalog[] = [];
+    const failed: string[] = [];
+    results.forEach((result, i) => {
+      if (result.status === "fulfilled") loaded.push(result.value);
+      else failed.push(selectedSellerIds[i]);
+    });
+
+    setCatalogs(loaded);
+    setCatalogsLoading(false);
+
+    if (failed.length > 0) {
+      setCatalogsError(`No se pudo cargar el catálogo de: ${failed.join(", ")}`);
+    }
+    if (loaded.length > 0) {
+      setStep(2);
+    }
+  }
+
+  const mergedProducts = useMemo<SellerTaggedProduct[]>(
+    () =>
+      catalogs.flatMap((catalog) =>
+        catalog.products.map((product) => ({
+          ...product,
+          sellerId: catalog.sellerId,
+          sellerName: catalog.sellerName,
+        })),
+      ),
+    [catalogs],
+  );
+
+  const scored = useMemo(
+    () => scoreProducts(mergedProducts, { weights, noInterestThreshold, stockMode }, hardFilters),
+    [mergedProducts, weights, noInterestThreshold, stockMode, hardFilters],
+  );
 
   const productsBySkuId = useMemo(() => {
-    const map = new Map<string, Product>();
-    catalog?.products.forEach((p) => map.set(p.skuId, p));
+    const map = new Map<string, SellerTaggedProduct>();
+    mergedProducts.forEach((p) => map.set(p.skuId, p));
     manualAdditions.forEach((p) => map.set(p.skuId, p));
     return map;
-  }, [catalog, manualAdditions]);
+  }, [mergedProducts, manualAdditions]);
 
   // Selección automática: los mejores `topN` productos elegibles (no excluidos).
   const autoSelectedSkuIds = useMemo(() => {
@@ -112,7 +141,10 @@ export default function App() {
   }, [baseFinalSkuIds.join("|")]);
 
   const finalProducts = useMemo(
-    () => finalOrder.map((id) => productsBySkuId.get(id)).filter((p): p is Product => Boolean(p)),
+    () =>
+      finalOrder
+        .map((id) => productsBySkuId.get(id))
+        .filter((p): p is SellerTaggedProduct => Boolean(p)),
     [finalOrder, productsBySkuId],
   );
 
@@ -125,7 +157,7 @@ export default function App() {
     });
   }
 
-  function handleAddManual(product: Product) {
+  function handleAddManual(product: SellerTaggedProduct) {
     setExcludedSkuIds((prev) => {
       if (!prev.has(product.skuId)) return prev;
       const next = new Set(prev);
@@ -143,29 +175,53 @@ export default function App() {
     setFinalOrder((prev) => prev.filter((id) => id !== skuId));
   }
 
+  function handleRestart() {
+    setStep(1);
+    setSelectedSellerIds([]);
+    setCatalogs([]);
+    setCatalogsError(null);
+    setWeights(DEFAULT_SCORING_WEIGHTS);
+    setNoInterestThreshold(6);
+    setStockMode("prefer-high-stock");
+    setHardFilters(DEFAULT_HARD_FILTERS);
+    setTopN(DEFAULT_TOP_N);
+    setExcludedSkuIds(new Set());
+    setManualAdditions([]);
+    setFinalOrder([]);
+  }
+
+  const sellerNames = catalogs.map((c) => c.sellerName);
+  const fileLabel =
+    selectedSellerIds.length === 1 ? selectedSellerIds[0] : `multiseller-${selectedSellerIds.length}`;
+
   return (
     <div className="min-h-screen bg-slate-100">
       <header className="border-b border-slate-200 bg-white px-6 py-4 shadow-sm">
-        <h1 className="text-lg font-semibold text-slate-900">
-          Constructor de Colecciones — VTEX
-        </h1>
-        <p className="text-sm text-slate-500">
+        <h1 className="text-lg font-semibold text-slate-900">Constructor de Colecciones — VTEX</h1>
+        <p className="mb-4 text-sm text-slate-500">
           Carrefour Argentina · armado semi-automático de colecciones por seller 3P
         </p>
+        <StepIndicator current={step} onJump={(s) => setStep(s as 1 | 2 | 3 | 4)} />
       </header>
 
-      <main className="mx-auto grid max-w-7xl grid-cols-1 gap-4 p-4 lg:grid-cols-[320px_1fr_360px]">
-        <aside className="flex flex-col gap-4">
-          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <SellerSelector
-              sellers={sellers}
-              selectedSellerId={selectedSellerId}
-              onChange={setSelectedSellerId}
-              loading={sellersLoading}
-              error={sellersError}
-            />
-          </div>
-          <FilterPanel
+      <main className="mx-auto max-w-7xl p-4">
+        {step === 1 && (
+          <Step1Sellers
+            sellers={sellers}
+            loading={sellersLoading}
+            error={sellersError}
+            selectedSellerIds={selectedSellerIds}
+            onToggle={toggleSeller}
+            onSelectAll={(ids) => setSelectedSellerIds(ids)}
+            onClear={() => setSelectedSellerIds([])}
+            onNext={handleNextFromStep1}
+            nextLoading={catalogsLoading}
+            nextError={catalogsError}
+          />
+        )}
+
+        {step === 2 && (
+          <Step2Criteria
             weights={weights}
             onWeightsChange={setWeights}
             noInterestThreshold={noInterestThreshold}
@@ -176,35 +232,38 @@ export default function App() {
             onHardFiltersChange={setHardFilters}
             topN={topN}
             onTopNChange={setTopN}
+            onBack={() => setStep(1)}
+            onNext={() => setStep(3)}
           />
-        </aside>
+        )}
 
-        <section className="flex flex-col gap-4">
-          {catalogLoading && <p className="text-sm text-slate-500">Cargando catálogo...</p>}
-          {catalogError && <p className="text-sm text-red-600">{catalogError}</p>}
-          {catalog && (
-            <ProductGrid
-              scored={scored}
-              allProducts={catalog.products}
-              excludedSkuIds={excludedSkuIds}
-              onToggleExclude={handleToggleExclude}
-              topN={topN}
-              finalSkuIds={new Set(finalOrder)}
-              onAddManual={handleAddManual}
-            />
-          )}
-        </section>
-
-        <aside className="flex flex-col gap-4">
-          <ReorderList
-            products={finalProducts}
+        {step === 3 && (
+          <Step3Review
+            scored={scored}
+            allProducts={mergedProducts}
+            excludedSkuIds={excludedSkuIds}
+            onToggleExclude={handleToggleExclude}
+            topN={topN}
+            finalSkuIds={new Set(finalOrder)}
+            onAddManual={handleAddManual}
+            finalProducts={finalProducts}
             onReorder={setFinalOrder}
             onRemove={handleRemoveFromFinal}
+            onBack={() => setStep(2)}
+            onNext={() => setStep(4)}
           />
-          {selectedSellerId && (
-            <ExportButton products={finalProducts} sellerId={selectedSellerId} />
-          )}
-        </aside>
+        )}
+
+        {step === 4 && (
+          <Step4Export
+            finalProducts={finalProducts}
+            sellerNames={sellerNames}
+            weights={weights}
+            fileLabel={fileLabel}
+            onBack={() => setStep(3)}
+            onRestart={handleRestart}
+          />
+        )}
       </main>
     </div>
   );

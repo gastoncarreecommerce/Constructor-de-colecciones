@@ -1,18 +1,18 @@
 import { useMemo, useState } from "react";
-import type { Product, ScoredProduct } from "../lib/types";
+import type { ScoredSellerTaggedProduct, SellerTaggedProduct } from "../lib/types";
 
 const MAX_ROWS_SHOWN = 300;
 
 interface ProductGridProps {
   /** Productos ya scoreados y filtrados por filtros duros, ordenados de mejor a peor. */
-  scored: ScoredProduct[];
-  /** Catálogo completo del seller (para el buscador de alta manual). */
-  allProducts: Product[];
+  scored: ScoredSellerTaggedProduct[];
+  /** Catálogo combinado de los sellers elegidos (para el buscador de alta manual). */
+  allProducts: SellerTaggedProduct[];
   excludedSkuIds: Set<string>;
   onToggleExclude: (skuId: string) => void;
   topN: number;
   finalSkuIds: Set<string>;
-  onAddManual: (product: Product) => void;
+  onAddManual: (product: SellerTaggedProduct) => void;
 }
 
 function formatPrice(value: number): string {
@@ -73,7 +73,10 @@ export default function ProductGrid({
                 className="flex items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-slate-50"
               >
                 <span className="truncate">
-                  {p.productName} <span className="text-slate-400">· EAN {p.ean}</span>
+                  {p.productName}{" "}
+                  <span className="text-slate-400">
+                    · EAN {p.ean} · {p.sellerName}
+                  </span>
                 </span>
                 <button
                   type="button"
@@ -97,6 +100,7 @@ export default function ProductGrid({
             <tr className="text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="px-2 py-2">Incluir</th>
               <th className="px-2 py-2">Producto</th>
+              <th className="px-2 py-2">Seller</th>
               <th className="px-2 py-2">Categoría</th>
               <th className="px-2 py-2">EAN</th>
               <th className="px-2 py-2 text-right">Precio</th>
@@ -135,6 +139,7 @@ export default function ProductGrid({
                       <span className="max-w-xs truncate">{p.productName}</span>
                     </div>
                   </td>
+                  <td className="px-2 py-2 text-slate-500">{p.sellerName}</td>
                   <td className="px-2 py-2 text-slate-500">{p.categoryPath}</td>
                   <td className="px-2 py-2 font-mono text-xs">{p.ean}</td>
                   <td className="px-2 py-2 text-right tabular-nums">{formatPrice(p.price)}</td>

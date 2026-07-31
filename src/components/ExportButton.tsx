@@ -3,13 +3,14 @@ import type { Product } from "../lib/types";
 
 interface ExportButtonProps {
   products: Product[];
-  sellerId: string;
+  /** Identificador usado en el nombre del archivo (sellerId único, o un label combinado si son varios). */
+  fileLabel: string;
 }
 
-export default function ExportButton({ products, sellerId }: ExportButtonProps) {
+export default function ExportButton({ products, fileLabel }: ExportButtonProps) {
   function handleExport() {
     const csv = buildCollectionCsv(products);
-    const fileName = collectionCsvFileName(sellerId);
+    const fileName = collectionCsvFileName(fileLabel);
     downloadCsv(fileName, csv);
   }
 

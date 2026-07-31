@@ -1,9 +1,10 @@
 # Constructor de Colecciones — VTEX
 
 Herramienta interna (Carrefour Argentina) para armar colecciones de
-productos de VTEX a partir de un seller 3P, de forma semi-automática:
-scoring configurable por pesos, reordenamiento manual con drag & drop, y
-export a CSV listo para importar en Colecciones de VTEX.
+productos de VTEX a partir de uno o varios sellers 3P, de forma
+semi-automática, a través de un wizard de 4 pasos: elegir sellers, elegir
+criterios de scoring, revisar/reordenar (drag & drop), y exportar a CSV
+listo para importar en Colecciones de VTEX.
 
 ## Arquitectura
 
@@ -29,7 +30,8 @@ la v1 no lo usa: todo sale del JSON cacheado.
 ```
 /scripts                 Job de datos (Fase 1)
 /src/lib                 Tipos compartidos, motor de scoring (Fase 2), CSV, presets
-/src/components          Frontend (Fase 3)
+/src/components          Componentes reusables (grilla, reorder, export)
+/src/components/wizard   Los 4 pasos del wizard + indicador de progreso
 /api                      Serverless functions de Vercel (proxy VTEX)
 /data/sellers             JSON generados por el job (index.json + {sellerId}.json)
 /.github/workflows        Cron nocturno
@@ -86,10 +88,26 @@ pesos, filtros duros, cap por categoría).
 npm run dev
 ```
 
-Abrí `http://localhost:5173`. Vas a ver el seller de ejemplo (`seller-demo`)
-precargado. Una vez que corriste la Fase 1 con un seller real, va a
-aparecer también en el dropdown (el índice se lee de
-`data/sellers/index.json`, servido vía el symlink `public/data → ../data`).
+Abrí `http://localhost:5173`. El frontend es un wizard de 4 pasos:
+
+1. **Sellers** — elegí uno o varios sellers 3P (multi-select con buscador).
+   Sus catálogos se combinan en una sola colección.
+2. **Criterios** — activá qué priorizar (más vendidos/populares, recién
+   catalogados, mejor financiación, mejor descuento, stock, calidad de
+   contenido) con un nivel de importancia por criterio. "Mejor calificación"
+   aparece deshabilitada: requiere integrar la API de Reviews & Ratings de
+   VTEX, no está en el alcance actual. Filtros avanzados (stock mínimo, cap
+   por categoría, cantidad final) y presets quedan colapsados abajo.
+3. **Revisión** — grilla con el ranking automático (podés excluir productos
+   puntuales o agregar alguno manualmente) + la lista final reordenable con
+   drag & drop.
+4. **Exportar** — resumen de la colección armada y el botón de descarga del
+   CSV.
+
+Vas a ver el seller de ejemplo (`seller-demo`) disponible para elegir en el
+paso 1. Una vez que corriste la Fase 1 con sellers reales, van a aparecer
+ahí también (el índice se lee de `data/sellers/index.json`, servido vía el
+symlink `public/data → ../data`).
 
 Otros comandos útiles:
 

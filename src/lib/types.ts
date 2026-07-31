@@ -75,6 +75,18 @@ export interface ScoredProduct extends Product {
   score: number;
 }
 
+/**
+ * Producto etiquetado con el seller de origen. El wizard siempre trabaja
+ * con esta forma (incluso con un solo seller seleccionado) para no tener
+ * que ramificar la UI entre modo "un seller" y "varios sellers".
+ */
+export interface SellerTaggedProduct extends Product {
+  sellerId: string;
+  sellerName: string;
+}
+
+export type ScoredSellerTaggedProduct = SellerTaggedProduct & { score: number };
+
 export interface WeightPreset {
   name: string;
   weights: ScoringWeights;
