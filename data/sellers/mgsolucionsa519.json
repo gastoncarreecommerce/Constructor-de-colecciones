@@ -1,7 +1,7 @@
 {
   "sellerId": "mgsolucionsa519",
   "sellerName": "Grill Gloves",
-  "generatedAt": "2026-08-01T08:20:01.382Z",
+  "generatedAt": "2026-08-02T08:24:54.328Z",
   "products": [
     {
       "productId": "1751279",
@@ -14,7 +14,7 @@
       "listPrice": 25250,
       "discountPct": 0,
       "dateCreated": "2025-05-09T00:00:00.000Z",
-      "daysSinceCreated": 449,
+      "daysSinceCreated": 450,
       "salesRank": 1,
       "stock": 100,
       "maxInstallmentsNoInterest": 3,
@@ -32,7 +32,7 @@
       "listPrice": 22220,
       "discountPct": 0,
       "dateCreated": "2025-03-31T00:00:00.000Z",
-      "daysSinceCreated": 488,
+      "daysSinceCreated": 489,
       "salesRank": 2,
       "stock": 100,
       "maxInstallmentsNoInterest": 3,
@@ -50,7 +50,7 @@
       "listPrice": 42000,
       "discountPct": 52,
       "dateCreated": "2025-03-27T00:00:00.000Z",
-      "daysSinceCreated": 492,
+      "daysSinceCreated": 493,
       "salesRank": 3,
       "stock": 100,
       "maxInstallmentsNoInterest": 3,
