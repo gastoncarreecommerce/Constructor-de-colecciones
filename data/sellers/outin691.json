@@ -1,7 +1,7 @@
 {
   "sellerId": "outin691",
   "sellerName": "Outin",
-  "generatedAt": "2026-08-02T08:25:01.800Z",
+  "generatedAt": "2026-08-03T09:44:38.547Z",
   "products": [
     {
       "productId": "1742891",
@@ -14,7 +14,7 @@
       "listPrice": 375000,
       "discountPct": 23,
       "dateCreated": "2024-11-07T00:00:00.000Z",
-      "daysSinceCreated": 633,
+      "daysSinceCreated": 634,
       "salesRank": 1,
       "stock": 100,
       "maxInstallmentsNoInterest": 3,
@@ -32,7 +32,7 @@
       "listPrice": 375000,
       "discountPct": 23,
       "dateCreated": "2024-11-07T00:00:00.000Z",
-      "daysSinceCreated": 633,
+      "daysSinceCreated": 634,
       "salesRank": 2,
       "stock": 10,
       "maxInstallmentsNoInterest": 3,
