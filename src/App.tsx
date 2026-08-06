@@ -6,8 +6,14 @@ import Step1Sellers from "./components/wizard/Step1Sellers";
 import Step2Criteria from "./components/wizard/Step2Criteria";
 import Step3Review from "./components/wizard/Step3Review";
 import Step4Export from "./components/wizard/Step4Export";
-import { DEFAULT_HARD_FILTERS, DEFAULT_SCORING_WEIGHTS, scoreProducts } from "./lib/scoring";
+import {
+  DEFAULT_EXCLUSIVE_CRITERIA,
+  DEFAULT_HARD_FILTERS,
+  DEFAULT_SCORING_WEIGHTS,
+  scoreProducts,
+} from "./lib/scoring";
 import type {
+  ExclusiveCriteria,
   HardFilters,
   ScoringWeights,
   SellerCatalog,
@@ -44,6 +50,9 @@ export default function App() {
   const [noInterestThreshold, setNoInterestThreshold] = useState(6);
   const [stockMode, setStockMode] = useState<StockMode>("prefer-high-stock");
   const [hardFilters, setHardFilters] = useState<HardFilters>(DEFAULT_HARD_FILTERS);
+  const [exclusiveCriteria, setExclusiveCriteria] = useState<ExclusiveCriteria>(DEFAULT_EXCLUSIVE_CRITERIA);
+  const [maxSalesRank, setMaxSalesRank] = useState<number | null>(null);
+  const [maxDaysSinceCreated, setMaxDaysSinceCreated] = useState<number | null>(null);
   const [topN, setTopN] = useState(DEFAULT_TOP_N);
   const [noTopLimit, setNoTopLimit] = useState(false);
   const [interleaveBySeller, setInterleaveBySeller] = useState(true);
@@ -218,8 +227,22 @@ export default function App() {
   );
 
   const scored = useMemo(
-    () => scoreProducts(mergedProducts, { weights, noInterestThreshold, stockMode }, hardFilters),
-    [mergedProducts, weights, noInterestThreshold, stockMode, hardFilters],
+    () =>
+      scoreProducts(
+        mergedProducts,
+        { weights, noInterestThreshold, stockMode, exclusiveCriteria, maxSalesRank, maxDaysSinceCreated },
+        hardFilters,
+      ),
+    [
+      mergedProducts,
+      weights,
+      noInterestThreshold,
+      stockMode,
+      exclusiveCriteria,
+      maxSalesRank,
+      maxDaysSinceCreated,
+      hardFilters,
+    ],
   );
 
   const productsBySkuId = useMemo(() => {
@@ -346,6 +369,9 @@ export default function App() {
     setNoInterestThreshold(6);
     setStockMode("prefer-high-stock");
     setHardFilters(DEFAULT_HARD_FILTERS);
+    setExclusiveCriteria(DEFAULT_EXCLUSIVE_CRITERIA);
+    setMaxSalesRank(null);
+    setMaxDaysSinceCreated(null);
     setTopN(DEFAULT_TOP_N);
     setNoTopLimit(false);
     setInterleaveBySeller(true);
@@ -417,6 +443,12 @@ export default function App() {
             onStockModeChange={setStockMode}
             hardFilters={hardFilters}
             onHardFiltersChange={setHardFilters}
+            exclusiveCriteria={exclusiveCriteria}
+            onExclusiveCriteriaChange={setExclusiveCriteria}
+            maxSalesRank={maxSalesRank}
+            onMaxSalesRankChange={setMaxSalesRank}
+            maxDaysSinceCreated={maxDaysSinceCreated}
+            onMaxDaysSinceCreatedChange={setMaxDaysSinceCreated}
             topN={topN}
             onTopNChange={setTopN}
             noTopLimit={noTopLimit}

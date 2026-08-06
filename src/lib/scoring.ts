@@ -1,4 +1,4 @@
-import type { HardFilters, Product, ScoringOptions, ScoringWeights } from "./types";
+import type { ExclusiveCriteria, HardFilters, Product, ScoringOptions, ScoringWeights } from "./types";
 
 /** Valor neutro cuando no hay variación en el universo (evita división por cero). */
 const NEUTRAL_SCORE = 0.5;
@@ -12,10 +12,22 @@ export const DEFAULT_SCORING_WEIGHTS: ScoringWeights = {
   contentQualityWeight: 5,
 };
 
+export const DEFAULT_EXCLUSIVE_CRITERIA: ExclusiveCriteria = {
+  salesWeight: false,
+  recencyWeight: false,
+  noInterestWeight: false,
+  discountWeight: false,
+  stockWeight: false,
+  contentQualityWeight: false,
+};
+
 export const DEFAULT_SCORING_OPTIONS: ScoringOptions = {
   weights: DEFAULT_SCORING_WEIGHTS,
   noInterestThreshold: 6,
   stockMode: "prefer-high-stock",
+  exclusiveCriteria: DEFAULT_EXCLUSIVE_CRITERIA,
+  maxSalesRank: null,
+  maxDaysSinceCreated: null,
 };
 
 export const DEFAULT_HARD_FILTERS: HardFilters = {
@@ -34,6 +46,41 @@ function minMaxNormalize(values: number[]): number[] {
     return values.map(() => NEUTRAL_SCORE);
   }
   return values.map((v) => (v - min) / (max - min));
+}
+
+/**
+ * Filtros duros derivados de marcar un criterio como "excluyente" en el
+ * wizard: a diferencia del peso (que solo reordena), estos sacan del
+ * resultado a cualquier producto que no cumpla el mínimo del criterio.
+ * Solo aplican si el criterio también está activo (weight > 0).
+ */
+function applyExclusiveCriteria<T extends Product>(products: T[], options: ScoringOptions): T[] {
+  const exclusive = { ...DEFAULT_EXCLUSIVE_CRITERIA, ...options.exclusiveCriteria };
+  const { weights, noInterestThreshold } = options;
+  const maxSalesRank = options.maxSalesRank ?? null;
+  const maxDaysSinceCreated = options.maxDaysSinceCreated ?? null;
+
+  return products.filter((p) => {
+    if (weights.noInterestWeight > 0 && exclusive.noInterestWeight) {
+      if (p.maxInstallmentsNoInterest < noInterestThreshold) return false;
+    }
+    if (weights.discountWeight > 0 && exclusive.discountWeight) {
+      if (p.discountPct <= 0) return false;
+    }
+    if (weights.contentQualityWeight > 0 && exclusive.contentQualityWeight) {
+      if (!p.hasCompleteContent) return false;
+    }
+    if (weights.stockWeight > 0 && exclusive.stockWeight) {
+      if (p.stock <= 0) return false;
+    }
+    if (weights.salesWeight > 0 && exclusive.salesWeight && maxSalesRank !== null) {
+      if (p.salesRank > maxSalesRank) return false;
+    }
+    if (weights.recencyWeight > 0 && exclusive.recencyWeight && maxDaysSinceCreated !== null) {
+      if (p.daysSinceCreated > maxDaysSinceCreated) return false;
+    }
+    return true;
+  });
 }
 
 function applyHardFilters<T extends Product>(products: T[], filters: HardFilters): T[] {
@@ -141,7 +188,7 @@ export function scoreProducts<T extends Product = Product>(
     return { ...product, score };
   });
 
-  const filtered = applyHardFilters(scoredAll, hardFilters);
+  const filtered = applyExclusiveCriteria(applyHardFilters(scoredAll, hardFilters), options);
 
   const sorted = [...filtered].sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
