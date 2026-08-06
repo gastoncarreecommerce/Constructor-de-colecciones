@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { DEFAULT_EXCLUSIVE_CRITERIA } from "../../lib/scoring";
 import { deletePreset, listPresets, savePreset } from "../../lib/presets";
-import type { HardFilters, ScoringWeights, StockMode, WeightPreset } from "../../lib/types";
+import type { ExclusiveCriteria, HardFilters, ScoringWeights, StockMode, WeightPreset } from "../../lib/types";
 
 interface Step2CriteriaProps {
   weights: ScoringWeights;
@@ -11,6 +12,12 @@ interface Step2CriteriaProps {
   onStockModeChange: (mode: StockMode) => void;
   hardFilters: HardFilters;
   onHardFiltersChange: (filters: HardFilters) => void;
+  exclusiveCriteria: ExclusiveCriteria;
+  onExclusiveCriteriaChange: (value: ExclusiveCriteria) => void;
+  maxSalesRank: number | null;
+  onMaxSalesRankChange: (value: number | null) => void;
+  maxDaysSinceCreated: number | null;
+  onMaxDaysSinceCreatedChange: (value: number | null) => void;
   topN: number;
   onTopNChange: (value: number) => void;
   noTopLimit: boolean;
@@ -66,6 +73,16 @@ const CRITERIA: Array<{ key: keyof ScoringWeights; label: string; description: s
   },
 ];
 
+/** Qué significa "excluyente" para cada criterio, mostrado como ayuda bajo el toggle. */
+const EXCLUSIVE_HINTS: Record<keyof ScoringWeights, string> = {
+  salesWeight: "Solo van a entrar productos con posición de ranking igual o mejor que el máximo definido.",
+  recencyWeight: "Solo van a entrar productos dados de alta hace menos días que el máximo definido.",
+  noInterestWeight: "Solo van a entrar productos con esa cantidad de cuotas sin interés o más; el resto queda afuera (no solo peor rankeado).",
+  discountWeight: "Solo van a entrar productos con descuento (%) mayor a 0; los que no tienen descuento quedan afuera.",
+  stockWeight: "Solo van a entrar productos con stock disponible (stock > 0).",
+  contentQualityWeight: "Solo van a entrar productos con ficha completa (imagen, categoría, EAN, precio).",
+};
+
 function nearestImportanceLabel(weight: number): string {
   if (weight <= 0) return "";
   let closest = IMPORTANCE_LEVELS[0];
@@ -89,6 +106,12 @@ export default function Step2Criteria({
   onStockModeChange,
   hardFilters,
   onHardFiltersChange,
+  exclusiveCriteria,
+  onExclusiveCriteriaChange,
+  maxSalesRank,
+  onMaxSalesRankChange,
+  maxDaysSinceCreated,
+  onMaxDaysSinceCreatedChange,
   topN,
   onTopNChange,
   noTopLimit,
@@ -130,6 +153,10 @@ export default function Step2Criteria({
     onWeightsChange({ ...weights, [key]: value });
   }
 
+  function toggleExclusive(key: keyof ScoringWeights) {
+    onExclusiveCriteriaChange({ ...exclusiveCriteria, [key]: !exclusiveCriteria[key] });
+  }
+
   function handleSavePreset() {
     const name = presetName.trim();
     if (!name) return;
@@ -142,6 +169,9 @@ export default function Step2Criteria({
       topN,
       noTopLimit,
       interleaveBySeller,
+      exclusiveCriteria,
+      maxSalesRank,
+      maxDaysSinceCreated,
     });
     setPresets(listPresets());
     setSelectedPreset(name);
@@ -160,6 +190,9 @@ export default function Step2Criteria({
     onTopNChange(preset.topN ?? FALLBACK_TOP_N);
     onNoTopLimitChange(preset.noTopLimit ?? false);
     onInterleaveBySellerChange(preset.interleaveBySeller ?? true);
+    onExclusiveCriteriaChange(preset.exclusiveCriteria ?? DEFAULT_EXCLUSIVE_CRITERIA);
+    onMaxSalesRankChange(preset.maxSalesRank ?? null);
+    onMaxDaysSinceCreatedChange(preset.maxDaysSinceCreated ?? null);
   }
 
   function handleDeletePreset() {
@@ -177,7 +210,10 @@ export default function Step2Criteria({
         <h2 className="text-lg font-semibold text-slate-900">¿Qué querés priorizar?</h2>
         <p className="text-sm text-slate-500">
           Activá los criterios que te importan y elegí qué tan fuerte pesa cada uno. Podés combinar
-          varios — el score final es un promedio ponderado de todos los activos.
+          varios — el score final es un promedio ponderado de todos los activos. Marcá un criterio
+          como <span className="font-medium text-slate-600">excluyente</span> para que deje de ser solo
+          una preferencia de orden: los productos que no lo cumplan van a quedar directamente afuera de
+          la colección, no solo peor rankeados.
         </p>
       </div>
 
@@ -223,6 +259,55 @@ export default function Step2Criteria({
                       </button>
                     );
                   })}
+                </div>
+              )}
+
+              {active && (
+                <div className="flex flex-col gap-1.5 border-t border-slate-200/70 pl-7 pt-2">
+                  <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={exclusiveCriteria[criterion.key]}
+                      onChange={() => toggleExclusive(criterion.key)}
+                      className="h-3.5 w-3.5 accent-red-600"
+                    />
+                    Excluyente
+                  </label>
+                  {exclusiveCriteria[criterion.key] && (
+                    <p className="text-xs text-slate-500">{EXCLUSIVE_HINTS[criterion.key]}</p>
+                  )}
+                  {exclusiveCriteria[criterion.key] && criterion.key === "salesWeight" && (
+                    <label className="flex items-center justify-between pt-1 text-xs text-slate-600">
+                      <span>Posición máxima de ranking</span>
+                      <input
+                        type="number"
+                        min={1}
+                        placeholder="Sin tope"
+                        value={maxSalesRank ?? ""}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          onMaxSalesRankChange(raw === "" ? null : Number(raw));
+                        }}
+                        className="w-20 rounded-md border border-slate-300 px-2 py-1 text-right"
+                      />
+                    </label>
+                  )}
+                  {exclusiveCriteria[criterion.key] && criterion.key === "recencyWeight" && (
+                    <label className="flex items-center justify-between pt-1 text-xs text-slate-600">
+                      <span>Antigüedad máxima (días)</span>
+                      <input
+                        type="number"
+                        min={0}
+                        placeholder="Sin tope"
+                        value={maxDaysSinceCreated ?? ""}
+                        onChange={(e) => {
+                          const raw = e.target.value;
+                          onMaxDaysSinceCreatedChange(raw === "" ? null : Number(raw));
+                        }}
+                        className="w-20 rounded-md border border-slate-300 px-2 py-1 text-right"
+                      />
+                    </label>
+                  )}
                 </div>
               )}
 

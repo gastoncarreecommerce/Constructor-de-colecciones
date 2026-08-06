@@ -54,12 +54,33 @@ export interface ScoringWeights {
 /** Modo de interpretación del peso de stock. */
 export type StockMode = "prefer-high-stock" | "prefer-low-stock";
 
+/**
+ * Marca por criterio si, además de pesar en el score, es "excluyente":
+ * los productos que no lo cumplan quedan afuera del resultado (no solo
+ * peor rankeados). Solo tiene efecto si el criterio también está activo
+ * (weight > 0).
+ */
+export interface ExclusiveCriteria {
+  salesWeight: boolean;
+  recencyWeight: boolean;
+  noInterestWeight: boolean;
+  discountWeight: boolean;
+  stockWeight: boolean;
+  contentQualityWeight: boolean;
+}
+
 export interface ScoringOptions {
   weights: ScoringWeights;
   /** Cantidad mínima de cuotas sin interés para que noInterestWeight otorgue el bonus completo. */
   noInterestThreshold: number;
   /** "prefer-high-stock" (default) penaliza poco stock; "prefer-low-stock" favorece liquidar stock bajo. */
   stockMode: StockMode;
+  /** Opcional para no romper construcciones existentes; scoreProducts la completa con defaults (todo false). */
+  exclusiveCriteria?: ExclusiveCriteria;
+  /** Posición máxima de salesRank permitida cuando salesWeight es excluyente. null = sin tope. */
+  maxSalesRank?: number | null;
+  /** Antigüedad máxima en días permitida cuando recencyWeight es excluyente. null = sin tope. */
+  maxDaysSinceCreated?: number | null;
 }
 
 export interface HardFilters {
@@ -98,4 +119,8 @@ export interface WeightPreset {
   topN: number;
   noTopLimit: boolean;
   interleaveBySeller: boolean;
+  /** Opcionales para no romper presets guardados antes de que existiera esta feature. */
+  exclusiveCriteria?: ExclusiveCriteria;
+  maxSalesRank?: number | null;
+  maxDaysSinceCreated?: number | null;
 }

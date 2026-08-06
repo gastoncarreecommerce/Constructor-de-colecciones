@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { scoreProducts, DEFAULT_HARD_FILTERS, DEFAULT_SCORING_OPTIONS } from "./scoring";
+import { scoreProducts, DEFAULT_EXCLUSIVE_CRITERIA, DEFAULT_HARD_FILTERS, DEFAULT_SCORING_OPTIONS } from "./scoring";
 import type { HardFilters, Product, ScoringOptions, ScoringWeights } from "./types";
 
 function makeProduct(overrides: Partial<Product> = {}): Product {
@@ -249,6 +249,99 @@ describe("scoreProducts", () => {
       const filtersNull: HardFilters = { ...noHardFilters, categoryPaths: null };
       expect(scoreProducts(products, DEFAULT_SCORING_OPTIONS, filtersEmpty)).toHaveLength(2);
       expect(scoreProducts(products, DEFAULT_SCORING_OPTIONS, filtersNull)).toHaveLength(2);
+    });
+  });
+
+  describe("criterios excluyentes", () => {
+    it("noInterestWeight excluyente saca productos por debajo del threshold, no solo los peor rankea", () => {
+      const products = [
+        makeProduct({ skuId: "few", maxInstallmentsNoInterest: 3 }),
+        makeProduct({ skuId: "many", maxInstallmentsNoInterest: 6 }),
+      ];
+      const options = onlyWeight("noInterestWeight");
+      options.noInterestThreshold = 6;
+      options.exclusiveCriteria = { ...DEFAULT_EXCLUSIVE_CRITERIA, noInterestWeight: true };
+      const result = scoreProducts(products, options, noHardFilters);
+      expect(result.map((p) => p.skuId)).toEqual(["many"]);
+    });
+
+    it("discountWeight excluyente saca productos sin descuento", () => {
+      const products = [
+        makeProduct({ skuId: "no-discount", discountPct: 0 }),
+        makeProduct({ skuId: "discount", discountPct: 15 }),
+      ];
+      const options = onlyWeight("discountWeight");
+      options.exclusiveCriteria = { ...DEFAULT_EXCLUSIVE_CRITERIA, discountWeight: true };
+      const result = scoreProducts(products, options, noHardFilters);
+      expect(result.map((p) => p.skuId)).toEqual(["discount"]);
+    });
+
+    it("contentQualityWeight excluyente saca productos con ficha incompleta", () => {
+      const products = [
+        makeProduct({ skuId: "incomplete", hasCompleteContent: false }),
+        makeProduct({ skuId: "complete", hasCompleteContent: true }),
+      ];
+      const options = onlyWeight("contentQualityWeight");
+      options.exclusiveCriteria = { ...DEFAULT_EXCLUSIVE_CRITERIA, contentQualityWeight: true };
+      const result = scoreProducts(products, options, noHardFilters);
+      expect(result.map((p) => p.skuId)).toEqual(["complete"]);
+    });
+
+    it("stockWeight excluyente saca productos sin stock", () => {
+      const products = [
+        makeProduct({ skuId: "out", stock: 0 }),
+        makeProduct({ skuId: "in", stock: 5 }),
+      ];
+      const options = onlyWeight("stockWeight");
+      options.exclusiveCriteria = { ...DEFAULT_EXCLUSIVE_CRITERIA, stockWeight: true };
+      const result = scoreProducts(products, options, noHardFilters);
+      expect(result.map((p) => p.skuId)).toEqual(["in"]);
+    });
+
+    it("salesWeight excluyente saca productos por debajo de la posición máxima de ranking", () => {
+      const products = [
+        makeProduct({ skuId: "good", salesRank: 5 }),
+        makeProduct({ skuId: "bad", salesRank: 50 }),
+      ];
+      const options = onlyWeight("salesWeight");
+      options.exclusiveCriteria = { ...DEFAULT_EXCLUSIVE_CRITERIA, salesWeight: true };
+      options.maxSalesRank = 10;
+      const result = scoreProducts(products, options, noHardFilters);
+      expect(result.map((p) => p.skuId)).toEqual(["good"]);
+    });
+
+    it("recencyWeight excluyente saca productos más antiguos que el máximo de días", () => {
+      const products = [
+        makeProduct({ skuId: "new", daysSinceCreated: 10 }),
+        makeProduct({ skuId: "old", daysSinceCreated: 200 }),
+      ];
+      const options = onlyWeight("recencyWeight");
+      options.exclusiveCriteria = { ...DEFAULT_EXCLUSIVE_CRITERIA, recencyWeight: true };
+      options.maxDaysSinceCreated = 30;
+      const result = scoreProducts(products, options, noHardFilters);
+      expect(result.map((p) => p.skuId)).toEqual(["new"]);
+    });
+
+    it("un criterio excluyente sin estar activo (weight 0) no filtra nada", () => {
+      const products = [
+        makeProduct({ skuId: "no-discount", discountPct: 0 }),
+        makeProduct({ skuId: "discount", discountPct: 15 }),
+      ];
+      const options: ScoringOptions = {
+        weights: {
+          salesWeight: 100,
+          recencyWeight: 0,
+          noInterestWeight: 0,
+          discountWeight: 0,
+          stockWeight: 0,
+          contentQualityWeight: 0,
+        },
+        noInterestThreshold: 6,
+        stockMode: "prefer-high-stock",
+        exclusiveCriteria: { ...DEFAULT_EXCLUSIVE_CRITERIA, discountWeight: true },
+      };
+      const result = scoreProducts(products, options, noHardFilters);
+      expect(result).toHaveLength(2);
     });
   });
 });
