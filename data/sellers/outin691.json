@@ -1,43 +1,6 @@
 {
   "sellerId": "outin691",
   "sellerName": "Outin",
-  "generatedAt": "2026-08-06T08:36:01.156Z",
-  "products": [
-    {
-      "productId": "1742891",
-      "skuId": "218686",
-      "ean": "A000001-OUT",
-      "productName": "Máquina de espresso portátil Outin Nano Gris Espacial",
-      "categoryPath": "Electro y tecnología/Pequeños electrodomésticos/Cafeteras",
-      "imageUrl": "https://carrefourar.vteximg.com.br/arquivos/ids/595430/image-c90419cc4a904f8cbed623010b1961d1.jpg?v=638665887188870000",
-      "price": 290000,
-      "listPrice": 375000,
-      "discountPct": 23,
-      "dateCreated": "2024-11-07T00:00:00.000Z",
-      "daysSinceCreated": 637,
-      "salesRank": 1,
-      "stock": 100,
-      "maxInstallmentsNoInterest": 3,
-      "hasCompleteContent": true,
-      "linkText": "maquina-de-espresso-portatil-outin-nano-gris-espacial-1742891"
-    },
-    {
-      "productId": "1742890",
-      "skuId": "218685",
-      "ean": "A000004-OUT",
-      "productName": "Máquina de espresso portátil Outin Nano Rojo Carmesí",
-      "categoryPath": "Electro y tecnología/Pequeños electrodomésticos/Cafeteras",
-      "imageUrl": "https://carrefourar.vteximg.com.br/arquivos/ids/595421/image-bdf425715b314c679bedf6e59c00f4c4.jpg?v=638826505410200000",
-      "price": 290000,
-      "listPrice": 375000,
-      "discountPct": 23,
-      "dateCreated": "2024-11-07T00:00:00.000Z",
-      "daysSinceCreated": 637,
-      "salesRank": 2,
-      "stock": 10,
-      "maxInstallmentsNoInterest": 3,
-      "hasCompleteContent": true,
-      "linkText": "maquina-de-espresso-portatil-outin-nano-rojo-carmesi--1742890"
-    }
-  ]
+  "generatedAt": "2026-08-07T07:17:00.821Z",
+  "products": []
 }
