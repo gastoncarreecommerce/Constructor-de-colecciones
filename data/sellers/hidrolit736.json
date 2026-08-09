@@ -1,7 +1,7 @@
 {
   "sellerId": "hidrolit736",
   "sellerName": "Hidrolit",
-  "generatedAt": "2026-08-08T06:51:04.375Z",
+  "generatedAt": "2026-08-09T06:56:00.249Z",
   "products": [
     {
       "productId": "1767299",
@@ -14,7 +14,7 @@
       "listPrice": 256000,
       "discountPct": 30,
       "dateCreated": "2026-02-05T00:00:00.000Z",
-      "daysSinceCreated": 184,
+      "daysSinceCreated": 185,
       "salesRank": 1,
       "stock": 10,
       "maxInstallmentsNoInterest": 3,
@@ -32,7 +32,7 @@
       "listPrice": 295000,
       "discountPct": 30,
       "dateCreated": "2026-02-05T00:00:00.000Z",
-      "daysSinceCreated": 184,
+      "daysSinceCreated": 185,
       "salesRank": 2,
       "stock": 10,
       "maxInstallmentsNoInterest": 3,
