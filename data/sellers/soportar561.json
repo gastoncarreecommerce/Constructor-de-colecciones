@@ -1,7 +1,7 @@
 {
   "sellerId": "soportar561",
   "sellerName": "SOPORT",
-  "generatedAt": "2026-08-10T07:43:29.315Z",
+  "generatedAt": "2026-08-11T07:24:45.595Z",
   "products": [
     {
       "productId": "1770989",
@@ -14,7 +14,7 @@
       "listPrice": 88000,
       "discountPct": 0,
       "dateCreated": "2026-05-05T00:00:00.000Z",
-      "daysSinceCreated": 97,
+      "daysSinceCreated": 98,
       "salesRank": 1,
       "stock": 100,
       "maxInstallmentsNoInterest": 1,
