@@ -1,7 +1,7 @@
 {
   "sellerId": "praga278",
   "sellerName": "Praga",
-  "generatedAt": "2026-08-11T07:06:47.534Z",
+  "generatedAt": "2026-08-12T07:25:34.919Z",
   "products": [
     {
       "productId": "1753341",
@@ -14,7 +14,7 @@
       "listPrice": 1538460,
       "discountPct": 35,
       "dateCreated": "2025-07-23T00:00:00.000Z",
-      "daysSinceCreated": 384,
+      "daysSinceCreated": 385,
       "salesRank": 1,
       "stock": 10,
       "maxInstallmentsNoInterest": 1,
