@@ -1,7 +1,7 @@
 {
   "sellerId": "intecnova657",
   "sellerName": "Intecnova",
-  "generatedAt": "2026-08-15T06:36:51.504Z",
+  "generatedAt": "2026-08-16T06:38:58.072Z",
   "products": [
     {
       "productId": "1743406",
@@ -14,7 +14,7 @@
       "listPrice": 145000,
       "discountPct": 7,
       "dateCreated": "2024-12-12T00:00:00.000Z",
-      "daysSinceCreated": 611,
+      "daysSinceCreated": 612,
       "salesRank": 1,
       "stock": 100,
       "maxInstallmentsNoInterest": 3,
