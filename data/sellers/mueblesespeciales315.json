@@ -1,7 +1,7 @@
 {
   "sellerId": "mueblesespeciales315",
   "sellerName": "Muebles especiales",
-  "generatedAt": "2026-08-21T06:45:23.375Z",
+  "generatedAt": "2026-08-22T06:39:44.738Z",
   "products": [
     {
       "productId": "1743211",
@@ -14,10 +14,10 @@
       "listPrice": 75000,
       "discountPct": 0,
       "dateCreated": "2024-12-03T00:00:00.000Z",
-      "daysSinceCreated": 626,
+      "daysSinceCreated": 627,
       "salesRank": 1,
       "stock": 100,
-      "maxInstallmentsNoInterest": 1,
+      "maxInstallmentsNoInterest": 3,
       "hasCompleteContent": true,
       "linkText": "cajones-de-pino-simil-verdura-1743211"
     }
