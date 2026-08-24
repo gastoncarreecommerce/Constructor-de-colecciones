@@ -1,7 +1,7 @@
 {
   "sellerId": "mgsolucionsa519",
   "sellerName": "Grill Gloves",
-  "generatedAt": "2026-08-23T06:40:44.405Z",
+  "generatedAt": "2026-08-24T06:57:32.935Z",
   "products": [
     {
       "productId": "1751279",
@@ -14,10 +14,10 @@
       "listPrice": 25250,
       "discountPct": 0,
       "dateCreated": "2025-05-09T00:00:00.000Z",
-      "daysSinceCreated": 471,
+      "daysSinceCreated": 472,
       "salesRank": 1,
       "stock": 100,
-      "maxInstallmentsNoInterest": 3,
+      "maxInstallmentsNoInterest": 1,
       "hasCompleteContent": true,
       "linkText": "guante-reforzado-color-negro-1751279"
     },
@@ -32,10 +32,10 @@
       "listPrice": 22220,
       "discountPct": 0,
       "dateCreated": "2025-03-31T00:00:00.000Z",
-      "daysSinceCreated": 510,
+      "daysSinceCreated": 511,
       "salesRank": 2,
       "stock": 100,
-      "maxInstallmentsNoInterest": 3,
+      "maxInstallmentsNoInterest": 1,
       "hasCompleteContent": true,
       "linkText": "guante-reforzado-marron-1749947"
     },
@@ -50,10 +50,10 @@
       "listPrice": 42000,
       "discountPct": 52,
       "dateCreated": "2025-03-27T00:00:00.000Z",
-      "daysSinceCreated": 514,
+      "daysSinceCreated": 515,
       "salesRank": 3,
       "stock": 100,
-      "maxInstallmentsNoInterest": 3,
+      "maxInstallmentsNoInterest": 1,
       "hasCompleteContent": true,
       "linkText": "guante-reforzado-naranja--1749871"
     }
