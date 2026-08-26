@@ -1,7 +1,7 @@
 {
   "sellerId": "Producteca242766",
   "sellerName": "Pilisar",
-  "generatedAt": "2026-08-25T06:47:50.927Z",
+  "generatedAt": "2026-08-26T06:49:38.521Z",
   "products": [
     {
       "productId": "1772462",
@@ -14,7 +14,7 @@
       "listPrice": 73699,
       "discountPct": 0,
       "dateCreated": "2026-06-11T00:00:00.000Z",
-      "daysSinceCreated": 75,
+      "daysSinceCreated": 76,
       "salesRank": 1,
       "stock": 99999,
       "maxInstallmentsNoInterest": 1,
