@@ -1,7 +1,7 @@
 {
   "sellerId": "praga278",
   "sellerName": "Praga",
-  "generatedAt": "2026-08-30T11:19:33.244Z",
+  "generatedAt": "2026-08-31T12:46:18.311Z",
   "products": [
     {
       "productId": "1753341",
@@ -14,10 +14,10 @@
       "listPrice": 1538460,
       "discountPct": 35,
       "dateCreated": "2025-07-23T00:00:00.000Z",
-      "daysSinceCreated": 403,
+      "daysSinceCreated": 404,
       "salesRank": 1,
       "stock": 10,
-      "maxInstallmentsNoInterest": 3,
+      "maxInstallmentsNoInterest": 1,
       "hasCompleteContent": true,
       "linkText": "lavavajillas-de-mesada-bob-color-negro-brillante-1753341"
     }
