@@ -1,7 +1,7 @@
 {
   "sellerId": "neba791",
   "sellerName": "NEBA",
-  "generatedAt": "2026-09-01T11:09:21.982Z",
+  "generatedAt": "2026-09-02T10:41:03.716Z",
   "products": [
     {
       "productId": "1752941",
@@ -14,7 +14,7 @@
       "listPrice": 700000,
       "discountPct": 2,
       "dateCreated": "2025-07-04T00:00:00.000Z",
-      "daysSinceCreated": 424,
+      "daysSinceCreated": 425,
       "salesRank": 1,
       "stock": 100,
       "maxInstallmentsNoInterest": 1,
