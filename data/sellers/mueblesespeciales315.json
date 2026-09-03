@@ -1,7 +1,7 @@
 {
   "sellerId": "mueblesespeciales315",
   "sellerName": "Muebles especiales",
-  "generatedAt": "2026-09-02T10:41:02.386Z",
+  "generatedAt": "2026-09-03T10:44:16.979Z",
   "products": [
     {
       "productId": "1743211",
@@ -14,7 +14,7 @@
       "listPrice": 75000,
       "discountPct": 0,
       "dateCreated": "2024-12-03T00:00:00.000Z",
-      "daysSinceCreated": 638,
+      "daysSinceCreated": 639,
       "salesRank": 1,
       "stock": 100,
       "maxInstallmentsNoInterest": 1,
