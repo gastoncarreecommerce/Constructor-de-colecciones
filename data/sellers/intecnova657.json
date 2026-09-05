@@ -1,7 +1,7 @@
 {
   "sellerId": "intecnova657",
   "sellerName": "Intecnova",
-  "generatedAt": "2026-09-04T10:43:17.777Z",
+  "generatedAt": "2026-09-05T10:00:36.045Z",
   "products": [
     {
       "productId": "1743406",
@@ -14,10 +14,10 @@
       "listPrice": 145000,
       "discountPct": 7,
       "dateCreated": "2024-12-12T00:00:00.000Z",
-      "daysSinceCreated": 631,
+      "daysSinceCreated": 632,
       "salesRank": 1,
       "stock": 100,
-      "maxInstallmentsNoInterest": 1,
+      "maxInstallmentsNoInterest": 3,
       "hasCompleteContent": true,
       "linkText": "joystick-inalambrico-microsoft-xbox-carbon-black-para-series-x-s-one-y-pc-con-windows-1743406"
     }
