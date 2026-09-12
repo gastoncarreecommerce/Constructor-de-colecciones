@@ -1,7 +1,7 @@
 {
   "sellerId": "soportar561",
   "sellerName": "SOPORT",
-  "generatedAt": "2026-09-11T10:50:35.750Z",
+  "generatedAt": "2026-09-12T10:21:09.512Z",
   "products": [
     {
       "productId": "1770989",
@@ -14,10 +14,10 @@
       "listPrice": 88000,
       "discountPct": 0,
       "dateCreated": "2026-05-05T00:00:00.000Z",
-      "daysSinceCreated": 129,
+      "daysSinceCreated": 130,
       "salesRank": 1,
       "stock": 100,
-      "maxInstallmentsNoInterest": 1,
+      "maxInstallmentsNoInterest": 3,
       "hasCompleteContent": true,
       "linkText": "soporte-pared-35x25-cm-para-starlink-v4-–-kit-completo-listo-para-instalar-1770989"
     }

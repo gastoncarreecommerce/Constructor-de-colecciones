@@ -1,7 +1,7 @@
 {
   "sellerId": "neba791",
   "sellerName": "NEBA",
-  "generatedAt": "2026-09-11T10:40:02.311Z",
+  "generatedAt": "2026-09-12T10:08:42.271Z",
   "products": [
     {
       "productId": "1752941",
@@ -14,10 +14,10 @@
       "listPrice": 700000,
       "discountPct": 2,
       "dateCreated": "2025-07-04T00:00:00.000Z",
-      "daysSinceCreated": 434,
+      "daysSinceCreated": 435,
       "salesRank": 1,
       "stock": 100,
-      "maxInstallmentsNoInterest": 1,
+      "maxInstallmentsNoInterest": 3,
       "hasCompleteContent": true,
       "linkText": "heladera-top-mount-t263-neba-1752941"
     }
